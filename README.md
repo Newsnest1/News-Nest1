@@ -1,7 +1,7 @@
 # News Nest – FastAPI‑based News Aggregator
 
-News Nest collects headlines from public sources in near real‑time, stores them in PostgreSQL, and serves them through a clean REST API.  
-The application is fully containerised and ships with a one‑command Docker Compose stack for both production‑style and development workflows.
+News Nest collects articles from public sources in near real‑time, stores them in PostgreSQL, and serves them through a clean REST API.  
+
 
 ---
 
