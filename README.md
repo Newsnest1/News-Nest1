@@ -26,10 +26,7 @@ News Nest collects articles from public sources in near real‑time, stores th
 4. [Development workflow](#development-workflow)
 5. [Architecture](#architecture)
 6. [Testing and quality](#testing-and-quality)
-7. [Configuration](#configuration)
-8. [Troubleshooting](#troubleshooting)
-9. [Future work](#future-work)
-10. [Licence and contribution](#licence-and-contribution)
+
 
 ---
 
