@@ -1,215 +1,216 @@
-# News Nest v0.1 – Docker-First News Aggregator
+# News Nest – FastAPI‑based News Aggregator
 
-> **Tagline:** Real-time headlines & lightning-fast search, fully containerised with FastAPI + PostgreSQL + MeiliSearch.
-
----
-
-## 🎯  What’s in this release
-
-| 🚀 Feature | Details |
-|-----------|---------|
-| **🐳 Full Docker Compose** | Single-command launch for prod & dev |
-| **⚡ Live Feed Aggregation** | Pulls NewsAPI + unlimited RSS feeds |
-| **🔎 Instant Search (MeiliSearch)** | Keyword & "More-like-this" vector search (stub for now) |
-| **📊 Postgres Persistence** | Durable article store with migrations |
-| **🩺 Health Checks** | `/livez`, `/readyz`, and container health definitions |
-| **🔒 Hardened Containers** | Non-root images, read-only FS, env-only secrets |
-| **📑 Hexagonal Architecture** | Presentation → Service → Business → Persistence → Adapters |
-| **🧪 CI Pipeline** | Ruff, pytest, and Docker build on every push |
+News Nest collects headlines from public sources in near real‑time, stores them in PostgreSQL, and serves them through a clean REST API.  
+The application is fully containerised and ships with a one‑command Docker Compose stack for both production‑style and development workflows.
 
 ---
 
-## 📋  Table of Contents
-1. [Quick Start (Docker)](#quick-start-docker)
-2. [Project Overview](#project-overview)
-3. [Docker Deployment](#docker-deployment)
-4. [Development Setup](#development-setup)
-5. [Architecture & Features](#architecture--features)
-6. [Testing](#testing)
+## Highlights
+
+| Feature | Description |
+|---------|-------------|
+| Complete Docker Compose stack | FastAPI service, PostgreSQL database, and MeiliSearch index |
+| Live feed aggregation | Combines NewsAPI and any number of RSS feeds, deduplicates results |
+| Search endpoint | Ready for full‑text and similarity search via MeiliSearch |
+| Persistent storage | Articles are written to Postgres with Alembic migrations |
+| Health probes | `/livez` and `/readyz` endpoints plus Docker health checks |
+| Secure container images | Non‑root user, read‑only filesystem, secrets via environment |
+
+---
+
+## Contents
+
+1. [Quick start](#quick-start)
+2. [System overview](#system-overview)
+3. [Running with Docker](#running-with-docker)
+4. [Development workflow](#development-workflow)
+5. [Architecture](#architecture)
+6. [Testing and quality](#testing-and-quality)
 7. [Configuration](#configuration)
 8. [Troubleshooting](#troubleshooting)
-9. [Roadmap](#roadmap)
-10. [License & Contributing](#license--contributing)
+9. [Future work](#future-work)
+10. [Licence and contribution](#licence-and-contribution)
 
 ---
 
-## 🚀  Quick Start (Docker)
-Launch News Nest in **< 3 min**:
+## Quick start
 
-### Prerequisites
-* Docker Desktop (macOS/Windows) *or* Docker Engine 20.10+ (Linux)
-* Docker Compose plugin (bundled with Docker Desktop)
-* Git
-
-### 1 · Clone the repo
 ```bash
-git clone https://github.com/<you>/news-nest.git
+git clone https://github.com/<your-user>/news-nest.git
 cd news-nest
+cp .env.example .env      # add your NEWSAPI_KEY
+docker compose up --build -d
 ```
 
-### 2 · Create `.env`
-```bash
-cp .env.example .env            # edit and paste your NEWSAPI_KEY
-```
+Available endpoints once the containers are up:
 
-### 3 · Start production-grade stack
-```bash
-docker compose up --build -d    # first run ≈ 2 min
-```
-
-### 4 · Hit the endpoints
-| URL | Purpose |
+| Path | Purpose |
 |------|---------|
-| http://localhost:8000/v1/feed | Latest aggregated articles |
-| http://localhost:8000/v1/search?q=ai | Search (stub) |
-| http://localhost:8000/docs | Swagger UI |
-| http://localhost:8000/readyz | Readiness probe |
-
-That’s it!  All services are up and networked.
+| `/v1/feed` | latest articles |
+| `/v1/search` | search (stub) |
+| `/docs` | Swagger UI |
+| `/readyz` | readiness check |
 
 ---
 
-## 📖  Project Overview
-**News Nest** ingests public news sources, de-duplicates, enriches, and serves them through a clean API (and optional React front-end).
+## System overview
 
-### Tech Stack
-* **Backend:** Python 3.11, FastAPI, Uvicorn
-* **Database:** PostgreSQL 16 (with Alembic migrations)
-* **Search:** MeiliSearch 1.4 (vector-ready)
-* **Queue / Async:** Native `asyncio` (Celery optional later)
-* **Containerisation:** Docker & Docker Compose
-* **CI/CD:** GitHub Actions, Docker Hub (optional)
+* **Language:** Python 3.11  
+* **Framework:** FastAPI with Uvicorn ASGI server  
+* **Database:** PostgreSQL 16  
+* **Search engine:** MeiliSearch 1.4  
+* **Containerisation:** Docker & Docker Compose  
+* **Continuous integration:** GitHub Actions (lint, tests, image build)
 
 ---
 
-## 🐳  Docker Deployment
+## Running with Docker
 
-### Architecture (production compose)
+The default `docker-compose.yml` starts three containers:
+
 ```
-┌───────────────┐    ┌────────────────┐    ┌────────────────┐
-│   Nginx *     │    │  FastAPI App   │    │  MeiliSearch   │
-│  (optional)   │──▶ │ (Uvicorn, 8000)│──▶ │  Port 7700     │
-└───────────────┘    └────────────────┘    └────────────────┘
-          │                    │                    │
-          └────────────────────┴────────────────────┘
-                               │
-                         ┌──────────────┐
-                         │  Postgres    │
-                         │  Port 5432   │
-                         └──────────────┘
+fastapi  (port 8000)  ─┐
+postgres (port 5432)  ─┼─ internal Docker network
+meilisearch (7700)   ─┘
 ```
-*Nginx is commented out by default; enable for SSL & rate-limiting.*
 
-### Available Compose files
-| File | Purpose |
-|------|---------|
-| `docker-compose.yml` | Production-like stack (FastAPI, Postgres, MeiliSearch) |
-| `docker-compose.dev.yml` | Dev overrides with code bind-mount & auto-reload |
+There is also a `docker-compose.dev.yml` overlay that mounts the source tree
+and runs Uvicorn in reload mode for rapid iteration.
 
-### Common Make targets
+Common commands:
+
 ```bash
-make build   # docker compose build
-make up      # docker compose up -d (prod)
-make dev-up  # docker compose -f ...dev.yml up
-make logs    # tail all service logs
-make test    # run pytest inside container
+make build        # docker compose build
+make up           # start production‑style stack
+make down         # stop containers
+make dev-up       # start dev stack with code hot‑reload
+make logs         # tail all service logs
+make test         # run pytest in container
 ```
 
 ---
 
-## 🛠️  Development Setup
+## Development workflow
 
-### Option 1 – Docker Dev (recommended)
+Option A: Docker dev stack (recommended)
+
 ```bash
-make dev-up         # starts api + db + search with live reload
-make dev-logs       # follow logs
-make dev-down       # stop
+make dev-up
+# edit code...
+make dev-logs     # watch logs
+make dev-down
 ```
 
-### Option 2 – Local venv
+Option B: Local virtual environment
+
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-export NEWSAPI_KEY=xxx
+export NEWSAPI_KEY=<key>
 uvicorn app.main:app --reload
 ```
-*(requires Postgres & MeiliSearch running locally)*
+
+You will still need Postgres and MeiliSearch running locally or in Docker.
 
 ---
 
-## 🏗️  Architecture & Features
+## Architecture
 
-### Hexagonal Layer Diagram
-```
-... (diagram truncated for brevity in example) ...
-```
-*(diagram shows Presentation → Service → Business → Persistence → Adapters → DB)*
+The project follows a hexagonal design separated into six layers.
 
-### Core Features
-* **Aggregation:** pulls from unlimited RSS/NewsAPI sources; de-dupes via SHA-256(title+source).
-* **Enrichment (stub):** ready for language-detect, summary, embeddings.
-* **Search:** MeiliSearch full-text, filters (`topic`, `source`, `date`).
-* **Personalisation (roadmap):** per-user prefs, pgvector similarity.
+```
+┌────────────────────────────────────────────────────────────┐
+│                Presentation Layer                          │
+│  ┌────────────┐ ┌───────────────┐ ┌──────────────┐        │
+│  │ Web routes │ │   API routes  │ │   Templates  │        │
+│  └────────────┘ └───────────────┘ └──────────────┘        │
+└────────────────────────────────────────────────────────────┘
+                               │
+┌────────────────────────────────────────────────────────────┐
+│                  Service Layer                             │
+│  Feed service • Search service • User service              │
+└────────────────────────────────────────────────────────────┘
+                               │
+┌────────────────────────────────────────────────────────────┐
+│                  Business Layer                            │
+│  Aggregation logic • Personalisation engine • Entities     │
+└────────────────────────────────────────────────────────────┘
+                               │
+┌────────────────────────────────────────────────────────────┐
+│                 Persistence Layer                          │
+│  SQLAlchemy models • Repositories • Object mappers         │
+└────────────────────────────────────────────────────────────┘
+                               │
+┌────────────────────────────────────────────────────────────┐
+│                  Adapters Layer                            │
+│  NewsAPI client • RSS client • MeiliSearch client          │
+└────────────────────────────────────────────────────────────┘
+                               │
+┌────────────────────────────────────────────────────────────┐
+│                   Database Layer                           │
+│  PostgreSQL • MeiliSearch index • Optional blob store      │
+└────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🧪  Testing
+## Testing and quality
 
-| Kind | Tool | Where |
-|------|------|-------|
-| Unit & Integration | **pytest** | `tests/` |
-| Lint & Formatting | **ruff**, **black** | CI & pre-commit |
-| CI Pipeline | GitHub Actions | `.github/workflows/ci.yml` |
+* **Unit & integration tests:** `pytest` in `tests/`
+* **Static checks:** `ruff` (lint) and `black` (format)
+* **CI:** GitHub Actions workflow in `.github/workflows/ci.yml`
 
-Run locally:
+Run everything locally:
+
 ```bash
-make test          # via Docker
-# OR
-pytest -q          # inside venv
+pytest -q
+ruff app
 ```
 
 ---
 
-## ⚙️  Configuration
-All options are env-vars (see `.env.example`).
+## Configuration
+
+All settings are supplied as environment variables.  
+See `.env.example` for the complete list.
+
+Example production values:
 
 ```env
-# Required
-NEWSAPI_KEY=your-newsapi-key
-
-# Optional
+NEWSAPI_KEY=abc123
 DATABASE_URL=postgresql+psycopg2://news:news@db:5432/news
 MEILI_HOST=http://search:7700
 MEILI_MASTER_KEY=masterKey
 FEED_SOURCES=rss:https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml,rss:https://feeds.bbci.co.uk/news/world/rss.xml
 ```
 
-Customise per-env with `docker-compose.override.yml` or a secrets manager.
+Override per‑environment with `docker-compose.override.yml` or your secrets manager of choice.
 
 ---
 
-## 🩹  Troubleshooting
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| `bind: address already in use :5432` | Host Postgres already running | Edit compose: `15432:5432` or stop local Postgres |
-| Feed returns `[]` | NewsAPI rate-limited | Add more RSS feeds; increase `limit` param |
-| `/search` 500 error | MeiliSearch not up | `docker compose logs search`, ensure port 7700 free |
-| `KeyError: NEWSAPI_KEY` | `.env` missing key | Edit `.env`, `docker compose restart api` |
+## Troubleshooting
+
+| Problem | Explanation | Fix |
+|---------|-------------|-----|
+| `bind: address already in use :5432` | Another Postgres running on host | Change mapping to `15432:5432` or stop local instance |
+| Empty `/v1/feed` response | Rate‑limited by NewsAPI | Add more RSS feeds or wait one minute |
+| 500 on `/v1/search` | MeiliSearch not reachable | `docker compose logs search` and verify port 7700 |
 
 ---
 
-## 🗺️  Roadmap
-* Vector similarity search (pgvector)
-* Automatic article summaries (OpenAI GPT-4o)
-* Auth & user feed personalisation
-* Nginx reverse proxy with rate-limit + SSL
-* Kubernetes Helm chart
+## Future work
+
+* Vector similarity search backed by pgvector
+* Automatic article summaries
+* User authentication and personalised feeds
+* Optional Nginx reverse proxy with SSL and rate limiting
+* Helm chart for Kubernetes deployment
 
 ---
 
-## 📄  License & Contributing
-MIT License. Feel free to fork & PR!
+## Licence and contribution
 
-1. Fork ➜ Branch ➜ Commit w/ tests ➜ PR to `main`.
-2. Ensure `make test` & `ruff` pass locally.
+This repository is released under the MIT licence.
 
+Pull requests are welcome.  
+Please run `make test` and ensure lint checks pass before submitting.
