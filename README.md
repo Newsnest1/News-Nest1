@@ -93,21 +93,13 @@ make test         # run pytest in container
 
 ## Development workflow
 
-Option A: Docker dev stack (recommended)
+Docker dev stack 
 
 ```bash
 make dev-up
 make dev-logs     
 make dev-down
-```
 
-Option B: Local virtual environment
-
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-export NEWSAPI_KEY=<key>
-uvicorn app.main:app --reload
 ```
 
 You will still need Postgres and MeiliSearch running locally or in Docker.
