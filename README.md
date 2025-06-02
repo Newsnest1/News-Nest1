@@ -26,8 +26,10 @@ cd news-nest1
 cp .env.example .env
 nano .env
 nano docker-compose.yml
-# Port 15432:5432
+Port 15432:5432
+"8000:8000"
 docker compose up --build -d
+curl http://localhost:8000/v1/feed | head
 ```
 
 Available endpoints once the containers are up:
@@ -39,7 +41,7 @@ Available endpoints once the containers are up:
 | `/docs` | Swagger UI |
 | `/readyz` | readiness check |
 
-curl http://localhost:8000/v1/feed | head
+
 ---
 
 ## System overview
