@@ -33,9 +33,12 @@ News Nest collects articles from public sources in near real‑time, stores th
 ## Quick start
 
 ```bash
-git clone https://github.com/<your-user>/news-nest.git
-cd news-nest
-cp .env.example .env      # add your NEWSAPI_KEY
+git clone https://github.com/Newsnest1/news-nest1.git
+cd news-nest1
+cp .env.example .env
+nano .env
+nano docker-compose.yml
+# Port 15432:5432
 docker compose up --build -d
 ```
 
@@ -48,6 +51,7 @@ Available endpoints once the containers are up:
 | `/docs` | Swagger UI |
 | `/readyz` | readiness check |
 
+curl http://localhost:8000/v1/feed | head
 ---
 
 ## System overview
@@ -93,8 +97,7 @@ Option A: Docker dev stack (recommended)
 
 ```bash
 make dev-up
-# edit code...
-make dev-logs     # watch logs
+make dev-logs     
 make dev-down
 ```
 
