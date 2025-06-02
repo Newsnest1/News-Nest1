@@ -3,18 +3,6 @@
 News Nest collects articles from public sources in near real‑time, stores them in PostgreSQL, and serves them through a clean REST API.  
 
 
----
-
-## Highlights
-
-| Feature | Description |
-|---------|-------------|
-| Complete Docker Compose stack | FastAPI service, PostgreSQL database, and MeiliSearch index |
-| Live feed aggregation | Combines NewsAPI and any number of RSS feeds, deduplicates results |
-| Search endpoint | Ready for full‑text and similarity search via MeiliSearch |
-| Persistent storage | Articles are written to Postgres with Alembic migrations |
-| Health probes | `/livez` and `/readyz` endpoints plus Docker health checks |
-| Secure container images | Non‑root user, read‑only filesystem, secrets via environment |
 
 ---
 
