@@ -1,6 +1,8 @@
 import asyncio
 from app.adapters.newsapi_adapter import fetch_newsapi_articles
 from app.adapters.rss_adapter import fetch_rss_articles
+from app.services.categorization import categorize_article
+
 
 async def get_latest_articles(limit: int = 20):
     """Fetch and merge articles from all adapters, deduplicate & sort."""
@@ -19,5 +21,6 @@ async def get_latest_articles(limit: int = 20):
         key = art["title"] + art["source"]
         if key not in seen:
             seen.add(key)
+            art["category"] = categorize_article(art)
             unique.append(art)
     return unique[:limit]
