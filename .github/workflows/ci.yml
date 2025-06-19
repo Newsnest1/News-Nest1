@@ -35,7 +35,7 @@ jobs:
       - name: Lint
         run: |
           pip install ruff
-          ruff .
+          ruff check .
       - name: Tests
         env:
           # Set these if your tests use them, adjust as needed for your app
