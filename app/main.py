@@ -1,10 +1,11 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from app.routes.feed import router as feed_router
+from app.routes.search import router as search_router
 
 load_dotenv()
 
-from app.routes.feed import router as feed_router
-from app.routes.search import router as search_router
+
 
 app = FastAPI(title="News Aggregator API")
 
