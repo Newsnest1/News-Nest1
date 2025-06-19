@@ -20,6 +20,6 @@ services:
   search:
     image: getmeili/meilisearch:v1.4
     environment:
-      - MEILI_MASTER_KEY=masterKey
+      - MEILI_MASTER_KEY=79218197551724857046
     ports:
       - "7701:7700"
