@@ -1,15 +1,21 @@
-import feedparser, datetime, asyncio, httpx
+import asyncio
+import datetime
+
+import feedparser
+import httpx
 
 RSS_FEEDS = [
     "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
     "https://feeds.bbci.co.uk/news/world/rss.xml",
 ]
 
+
 async def _fetch_rss(url: str) -> str:
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.get(url)
         resp.raise_for_status()
         return resp.text
+
 
 async def fetch_rss_articles(limit: int = 20):
     tasks = [_fetch_rss(url) for url in RSS_FEEDS]

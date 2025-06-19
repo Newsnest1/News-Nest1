@@ -11,4 +11,3 @@ def categorize_article(article):
         return "Politics"
     else:
         return "Other"
-

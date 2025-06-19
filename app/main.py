@@ -1,5 +1,6 @@
-from fastapi import FastAPI
 from dotenv import load_dotenv
+from fastapi import FastAPI
+
 load_dotenv()
 
 from app.routes.feed import router as feed_router
