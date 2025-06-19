@@ -16,7 +16,7 @@ jobs:
           POSTGRES_USER: news
           POSTGRES_PASSWORD: news
           POSTGRES_DB: news
-        ports: ['5432:5432']
+        ports: ['15432:5432']
         options: >-
           --health-cmd="pg_isready"
           --health-interval=10s
@@ -35,8 +35,13 @@ jobs:
       - name: Lint
         run: |
           pip install ruff
-          ruff app
+          ruff .
       - name: Tests
+        env:
+          # Set these if your tests use them, adjust as needed for your app
+          DATABASE_URL: postgresql://news:news@localhost:15432/news
+          PGUSER: news
+          PGPASSWORD: news
         run: |
           pip install pytest
           pytest -q
