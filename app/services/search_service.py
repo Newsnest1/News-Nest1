@@ -3,7 +3,7 @@ from typing import List
 
 client = meilisearch.Client(
     "http://127.0.0.1:7701",
-    "ryiQdZzczfwDopVd1T_gY-Tftk-bBcpGxjq6KO3qDbU"  # ← new key!
+    "79218197551724857046"  # ← new key!
 )
 
 INDEX_NAME = "articles"
