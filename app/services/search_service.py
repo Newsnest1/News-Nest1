@@ -2,7 +2,7 @@ import meilisearch
 from typing import List
 
 client = meilisearch.Client(
-    "http://127.0.0.1:7701",
+    "http://search:7700",
     "79218197551724857046"  # ← new key!
 )
 
