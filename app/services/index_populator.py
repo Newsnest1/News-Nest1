@@ -1,19 +1,30 @@
 import asyncio
-from app.adapters.rss_adapter import fetch_rss_articles
-from app.adapters.newsapi_adapter import fetch_newsapi_articles
+from app.services.feed_service import get_all_articles
+from app.database import SessionLocal
 import meilisearch
 
 client = meilisearch.Client("http://search:7700", "79218197551724857046")
 
 async def populate_meilisearch_index():
-    # Fetch articles from both sources
-    rss_articles = await fetch_rss_articles(limit=50)
-    newsapi_articles = await fetch_newsapi_articles(limit=50)
-    all_articles = rss_articles + newsapi_articles
+    db = SessionLocal()
+    try:
+        # Fetch articles from the database
+        all_articles = get_all_articles(db)
 
-    # Assign unique IDs to each article (required by MeiliSearch)
-    for i, article in enumerate(all_articles):
-        article["id"] = i + 1
+        # Convert ORM objects to dicts
+        articles_dict = [
+            {
+                "id": article.url,  # Use URL as the unique ID
+                "title": article.title,
+                "source": article.source,
+                "content": article.content,
+                "published_at": article.published_at.isoformat() if article.published_at else None,
+                "category": article.category,
+            }
+            for article in all_articles
+        ]
 
-    if all_articles:
-        client.index("articles").add_documents(all_articles)
+        if articles_dict:
+            client.index("articles").add_documents(articles_dict, primary_key="id")
+    finally:
+        db.close()
