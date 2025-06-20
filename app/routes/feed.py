@@ -2,7 +2,7 @@ from typing import Optional
 from collections import defaultdict
 from fastapi import APIRouter, Query, Depends
 from sqlalchemy.orm import Session
-from app.services.feed_service import get_latest_articles
+from app.services.feed_service import get_latest_articles, get_all_articles
 from app.database import get_db
 
 router = APIRouter(tags=["feed"])
@@ -16,16 +16,18 @@ async def feed(
         None, description="Optional category filter (e.g. Technology, Sports, etc.)")
 ):
     """Return articles grouped by category, or filtered by one category."""
-    articles = await get_latest_articles(db=db, limit=limit)
+    articles = get_all_articles(db=db)
 
     if category:
         # Only return articles from one category if specified
-        articles = [a for a in articles if a.get("category") == category]
-        return {"items": articles}
+        articles = [a for a in articles if a.category == category]
+        return {"items": articles[:limit]}
 
     # Group articles by category
     grouped = defaultdict(list)
     for article in articles:
-        grouped[article.get("category", "Other")].append(article)
+        if len(grouped[article.category]) < limit:
+            grouped[article.category].append(article)
 
+    # Return a limited number of articles per category
     return grouped
