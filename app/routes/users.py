@@ -146,4 +146,12 @@ async def update_notification_preferences(
     if updated_user:
         return updated_user
     else:
-        raise HTTPException(status_code=404, detail="User not found") 
+        raise HTTPException(status_code=404, detail="User not found")
+
+@router.delete("/users/me", tags=["users"])
+async def delete_my_account(
+    current_user: schemas.User = Depends(auth_service.get_current_active_user),
+    db: Session = Depends(database.get_db)
+):
+    crud.delete_user(db, current_user.id)
+    return {"message": f"User {current_user.username} deleted successfully."} 

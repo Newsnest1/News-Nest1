@@ -116,4 +116,16 @@ def update_notification_preferences(db: Session, user_id: int, notifications_ena
         db.commit()
         db.refresh(user)
         return user
-    return None 
+    return None
+
+def delete_user(db: Session, user_id: int):
+    # Delete saved articles
+    db.query(database.UserSavedArticle).filter(database.UserSavedArticle.user_id == user_id).delete()
+    # Delete followed topics
+    db.query(database.UserTopic).filter(database.UserTopic.user_id == user_id).delete()
+    # Delete followed outlets
+    db.query(database.UserOutlet).filter(database.UserOutlet.user_id == user_id).delete()
+    # Delete the user
+    db.query(database.User).filter(database.User.id == user_id).delete()
+    db.commit()
+    return True 
