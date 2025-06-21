@@ -40,6 +40,9 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
+    notifications_enabled = Column(Boolean, default=True)
+    notify_topics = Column(Boolean, default=True)
+    notify_outlets = Column(Boolean, default=True)
 
 
 class UserSavedArticle(Base):

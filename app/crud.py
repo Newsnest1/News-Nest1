@@ -105,4 +105,15 @@ def unfollow_outlet(db: Session, user_id: int, outlet: str):
     return False
 
 def get_followed_outlets(db: Session, user_id: int):
-    return [uo.outlet for uo in db.query(database.UserOutlet).filter(database.UserOutlet.user_id == user_id).all()] 
+    return [uo.outlet for uo in db.query(database.UserOutlet).filter(database.UserOutlet.user_id == user_id).all()]
+
+def update_notification_preferences(db: Session, user_id: int, notifications_enabled: bool, notify_topics: bool, notify_outlets: bool):
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    if user:
+        user.notifications_enabled = notifications_enabled
+        user.notify_topics = notify_topics
+        user.notify_outlets = notify_outlets
+        db.commit()
+        db.refresh(user)
+        return user
+    return None 

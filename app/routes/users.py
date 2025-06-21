@@ -127,4 +127,23 @@ async def get_followed_outlets(
     db: Session = Depends(database.get_db)
 ):
     outlets = crud.get_followed_outlets(db, current_user.id)
-    return {"outlets": outlets} 
+    return {"outlets": outlets}
+
+# Notification preferences
+@router.put("/users/me/notifications", response_model=schemas.User)
+async def update_notification_preferences(
+    preferences: schemas.NotificationPreferences,
+    current_user: schemas.User = Depends(auth_service.get_current_active_user),
+    db: Session = Depends(database.get_db)
+):
+    updated_user = crud.update_notification_preferences(
+        db=db,
+        user_id=current_user.id,
+        notifications_enabled=preferences.notifications_enabled,
+        notify_topics=preferences.notify_topics,
+        notify_outlets=preferences.notify_outlets
+    )
+    if updated_user:
+        return updated_user
+    else:
+        raise HTTPException(status_code=404, detail="User not found") 

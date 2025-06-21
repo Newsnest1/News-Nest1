@@ -11,9 +11,17 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int = Field(..., description="Unique user ID")
     is_active: bool = Field(..., description="Whether the user account is active")
+    notifications_enabled: bool = Field(..., description="Whether notifications are enabled")
+    notify_topics: bool = Field(..., description="Whether to receive notifications for followed topics")
+    notify_outlets: bool = Field(..., description="Whether to receive notifications for followed outlets")
 
     class Config:
         orm_mode = True
+
+class NotificationPreferences(BaseModel):
+    notifications_enabled: bool = Field(..., description="Enable/disable all notifications")
+    notify_topics: bool = Field(..., description="Receive notifications for followed topics")
+    notify_outlets: bool = Field(..., description="Receive notifications for followed outlets")
 
 class Token(BaseModel):
     access_token: str = Field(..., description="JWT access token for authentication")

@@ -10,6 +10,7 @@ from app.services.index_populator import populate_meilisearch_index
 from app.database import create_db_and_tables, SessionLocal
 from app.services.feed_service import get_latest_articles
 from app.services.websocket_manager import manager
+from app.services.notification_service import send_personalized_notifications, send_broadcast_notification
 
 load_dotenv()
 
@@ -25,7 +26,7 @@ app.include_router(users_router, prefix="/v1")
 app.include_router(ws_router)
 
 async def periodic_feed_update():
-    """Periodically fetches new articles and notifies clients."""
+    """Periodically fetches new articles and sends personalized notifications."""
     while True:
         await asyncio.sleep(300)  # Sleep for 5 minutes
         logger.info("Running periodic feed update...")
@@ -33,9 +34,27 @@ async def periodic_feed_update():
         try:
             new_articles = await get_latest_articles(db=db, limit=100)
             if new_articles:
-                logger.info(f"Found {len(new_articles)} new articles. Broadcasting...")
-                await manager.broadcast(f'{{"type": "new_articles", "count": {len(new_articles)}}}')
-                # Also update MeiliSearch index
+                logger.info(f"Found {len(new_articles)} new articles. Sending personalized notifications...")
+                
+                # Convert articles to dict format for notifications
+                article_dicts = []
+                for article in new_articles:
+                    article_dict = {
+                        "url": article.url,
+                        "title": article.title,
+                        "source": article.source,
+                        "category": article.category,
+                        "published_at": article.published_at.isoformat() if article.published_at else None
+                    }
+                    article_dicts.append(article_dict)
+                
+                # Send personalized notifications to users
+                await send_personalized_notifications(article_dicts, db)
+                
+                # Also send broadcast notification for backward compatibility
+                await send_broadcast_notification(f"Found {len(new_articles)} new articles", len(new_articles))
+                
+                # Update MeiliSearch index
                 await populate_meilisearch_index()
         finally:
             db.close()
