@@ -1,6 +1,6 @@
-# News Nest – FastAPI‑based News Aggregator
+# News-Nest1
 
-News Nest collects articles from public sources in near real‑time, stores them in PostgreSQL, and serves them through a clean REST API.  
+News-Nest collects articles from public sources in near real-time, stores them in PostgreSQL, and serves them through a clean REST API.  
 
 
 
@@ -14,6 +14,8 @@ News Nest collects articles from public sources in near real‑time, stores th
 4. [Development workflow](#development-workflow)
 5. [Architecture](#architecture)
 6. [Testing and quality](#testing-and-quality)
+7. [User Features](#user-features)
+8. [API Response Fields](#api-response-fields)
 
 
 ---
@@ -46,10 +48,10 @@ Available endpoints once the containers are up:
 
 ## System overview
 
-* **Language:** Python 3.11  
+* **Language:** Python 3.11  
 * **Framework:** FastAPI with Uvicorn ASGI server  
-* **Database:** PostgreSQL 16  
-* **Search engine:** MeiliSearch 1.4  
+* **Database:** PostgreSQL 16  
+* **Search engine:** MeiliSearch 1.4  
 * **Containerisation:** Docker & Docker Compose  
 * **Continuous integration:** GitHub Actions (lint, tests, image build)
 
@@ -72,9 +74,9 @@ Common commands:
 
 ```bash
 make build        # docker compose build
-make up           # start production‑style stack
+make up           # start production-style stack
 make down         # stop containers
-make dev-up       # start dev stack with code hot‑reload
+make dev-up       # start dev stack with code hot-reload
 make logs         # tail all service logs
 make test         # run pytest in container
 ```
@@ -148,5 +150,43 @@ Run everything locally:
 pytest -q
 ruff app
 ```
+
+
+---
+
+## User Features
+
+### Save Articles
+- **Save an article:**
+  - `POST /v1/users/me/saved?article_url=...`
+- **Remove a saved article:**
+  - `DELETE /v1/users/me/saved?article_url=...`
+- **List saved articles:**
+  - `GET /v1/users/me/saved`
+
+### Personalized Feed
+- **Get personalized feed:**
+  - `GET /v1/feed/personalized`
+  - Returns articles from your followed topics and outlets, with an `is_saved` field for each article.
+
+### Follow Topics and Outlets
+- **Follow a topic:**
+  - `POST /v1/users/me/follow/topic?topic=...`
+- **Unfollow a topic:**
+  - `DELETE /v1/users/me/follow/topic?topic=...`
+- **List followed topics:**
+  - `GET /v1/users/me/followed/topics`
+- **Follow an outlet:**
+  - `POST /v1/users/me/follow/outlet?outlet=...`
+- **Unfollow an outlet:**
+  - `DELETE /v1/users/me/follow/outlet?outlet=...`
+- **List followed outlets:**
+  - `GET /v1/users/me/followed/outlets`
+
+
+---
+
+## API Response Fields
+- `is_saved`: `true` if you have saved the article, `false` otherwise.
 
 

@@ -11,3 +11,6 @@ requests
 beautifulsoup4
 pytest-mock
 pytest-asyncio
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart

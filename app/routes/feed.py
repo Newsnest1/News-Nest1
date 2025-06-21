@@ -1,12 +1,25 @@
 from typing import Optional
 from collections import defaultdict
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.services.feed_service import get_all_articles
 from app.services.search_service import search_articles
 from app.database import get_db
+from app.services.auth_service import get_current_active_user, oauth2_scheme
+from app import crud, schemas
 
 router = APIRouter(tags=["feed"])
+
+
+async def get_optional_user(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    """Get current user if token is provided, otherwise return None."""
+    if token is None:
+        return None
+    try:
+        from app.services.auth_service import get_current_user
+        return await get_current_user(token=token, db=db)
+    except HTTPException:
+        return None
 
 
 @router.get("/feed")
@@ -14,7 +27,8 @@ async def feed(
     db: Session = Depends(get_db),
     limit: int = Query(20, le=100),
     category: Optional[str] = Query(
-        None, description="Optional category filter (e.g. Technology, Sports, etc.)")
+        None, description="Optional category filter (e.g. Technology, Sports, etc.)"),
+    current_user: Optional[schemas.User] = Depends(get_optional_user)
 ):
     """Return articles grouped by category, or filtered by one category."""
     if category:
@@ -24,6 +38,15 @@ async def feed(
             limit=limit, 
             attributes_to_search_on=['category']
         )
+        
+        # Add saved status if user is authenticated
+        if current_user:
+            for article in search_results:
+                article['is_saved'] = crud.is_saved(db, current_user.id, article['url'])
+        else:
+            for article in search_results:
+                article['is_saved'] = False
+                
         return {"items": search_results}
 
     # If no category, get all articles and group them
@@ -39,3 +62,51 @@ async def feed(
         grouped[cat] = grouped[cat][:limit]
         
     return grouped
+
+
+@router.get("/feed/personalized")
+async def personalized_feed(
+    current_user: schemas.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+    limit: int = Query(20, le=100)
+):
+    """Return articles filtered by user's followed topics and outlets."""
+    # Get user's followed topics and outlets
+    followed_topics = crud.get_followed_topics(db, current_user.id)
+    followed_outlets = crud.get_followed_outlets(db, current_user.id)
+    
+    if not followed_topics and not followed_outlets:
+        return {"items": [], "message": "No topics or outlets followed. Follow some to get personalized content!"}
+    
+    # Get all articles
+    all_articles = get_all_articles(db=db)
+    
+    # Filter articles based on follows
+    filtered_articles = []
+    for article in all_articles:
+        # Check if article matches followed topics or outlets
+        topic_match = not followed_topics or article.category in followed_topics
+        outlet_match = not followed_outlets or article.source in followed_outlets
+        
+        if topic_match or outlet_match:
+            # Convert to dict and add saved status
+            article_dict = {
+                "url": article.url,
+                "title": article.title,
+                "source": article.source,
+                "content": article.content,
+                "published_at": article.published_at.isoformat() if article.published_at else None,
+                "category": article.category,
+                "is_saved": crud.is_saved(db, current_user.id, article.url)
+            }
+            filtered_articles.append(article_dict)
+    
+    # Sort by published_at (newest first) and limit
+    filtered_articles.sort(key=lambda x: x["published_at"] or "", reverse=True)
+    filtered_articles = filtered_articles[:limit]
+    
+    return {
+        "items": filtered_articles,
+        "followed_topics": followed_topics,
+        "followed_outlets": followed_outlets
+    }

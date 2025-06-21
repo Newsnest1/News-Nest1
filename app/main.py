@@ -5,6 +5,7 @@ import asyncio
 from app.routes.feed import router as feed_router
 from app.routes.search import router as search_router
 from app.routes.ws import router as ws_router
+from app.routes.users import router as users_router
 from app.services.index_populator import populate_meilisearch_index
 from app.database import create_db_and_tables, SessionLocal
 from app.services.feed_service import get_latest_articles
@@ -20,6 +21,7 @@ app = FastAPI(title="News Aggregator API")
 
 app.include_router(feed_router, prefix="/v1")
 app.include_router(search_router, prefix="/v1")
+app.include_router(users_router, prefix="/v1")
 app.include_router(ws_router)
 
 async def periodic_feed_update():
