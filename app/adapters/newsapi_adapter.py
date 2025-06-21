@@ -1,7 +1,10 @@
-import os, datetime
+import datetime
+import os
+
 import httpx
 
 NEWSAPI_ENDPOINT = "https://newsapi.org/v2/top-headlines"
+
 
 async def fetch_newsapi_articles(limit: int = 20):
     api_key = os.getenv("NEWSAPI_KEY")
@@ -25,7 +28,9 @@ async def fetch_newsapi_articles(limit: int = 20):
                 "title": item["title"],
                 "url": item["url"],
                 "source": item["source"]["name"],
-                "published_at": item.get("publishedAt", datetime.datetime.utcnow().isoformat()),
+                "published_at": item.get(
+                    "publishedAt", datetime.datetime.utcnow().isoformat()
+                ),
                 "summary": item.get("description") or "",
             }
         )
