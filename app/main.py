@@ -4,9 +4,11 @@ import logging
 import asyncio
 from app.routes.feed import router as feed_router
 from app.routes.search import router as search_router
+from app.routes.ws import router as ws_router
 from app.services.index_populator import populate_meilisearch_index
 from app.database import create_db_and_tables, SessionLocal
 from app.services.feed_service import get_latest_articles
+from app.services.websocket_manager import manager
 
 load_dotenv()
 
@@ -18,6 +20,23 @@ app = FastAPI(title="News Aggregator API")
 
 app.include_router(feed_router, prefix="/v1")
 app.include_router(search_router, prefix="/v1")
+app.include_router(ws_router)
+
+async def periodic_feed_update():
+    """Periodically fetches new articles and notifies clients."""
+    while True:
+        await asyncio.sleep(300)  # Sleep for 5 minutes
+        logger.info("Running periodic feed update...")
+        db = SessionLocal()
+        try:
+            new_articles = await get_latest_articles(db=db, limit=100)
+            if new_articles:
+                logger.info(f"Found {len(new_articles)} new articles. Broadcasting...")
+                await manager.broadcast(f'{{"type": "new_articles", "count": {len(new_articles)}}}')
+                # Also update MeiliSearch index
+                await populate_meilisearch_index()
+        finally:
+            db.close()
 
 @app.on_event("startup")
 async def startup_event():
@@ -50,6 +69,9 @@ async def startup_event():
                     await asyncio.sleep(5)
                 else:
                     logger.error("Failed to populate MeiliSearch index after 3 attempts. Search functionality may not work.")
+        
+        # Start the background task
+        asyncio.create_task(periodic_feed_update())
         
         logger.info("Startup completed!")
         
