@@ -2,7 +2,8 @@ from typing import Optional
 from collections import defaultdict
 from fastapi import APIRouter, Query, Depends
 from sqlalchemy.orm import Session
-from app.services.feed_service import get_latest_articles, get_all_articles
+from app.services.feed_service import get_all_articles
+from app.services.search_service import search_articles
 from app.database import get_db
 
 router = APIRouter(tags=["feed"])
@@ -16,18 +17,25 @@ async def feed(
         None, description="Optional category filter (e.g. Technology, Sports, etc.)")
 ):
     """Return articles grouped by category, or filtered by one category."""
-    articles = get_all_articles(db=db)
-
     if category:
-        # Only return articles from one category if specified
-        articles = [a for a in articles if a.category == category]
-        return {"items": articles[:limit]}
+        # Use MeiliSearch for typo-tolerant, case-insensitive category filtering
+        search_results = await search_articles(
+            q=category, 
+            limit=limit, 
+            attributes_to_search_on=['category']
+        )
+        return {"items": search_results}
 
-    # Group articles by category
+    # If no category, get all articles and group them
+    articles = get_all_articles(db=db)
     grouped = defaultdict(list)
     for article in articles:
-        if len(grouped[article.category]) < limit:
-            grouped[article.category].append(article)
+        # Don't apply the limit here, group all and then slice if needed.
+        # This part could be further optimized if needed.
+        grouped[article.category].append(article)
 
-    # Return a limited number of articles per category
+    # Limit the number of articles per category for the final output
+    for cat in grouped:
+        grouped[cat] = grouped[cat][:limit]
+        
     return grouped
