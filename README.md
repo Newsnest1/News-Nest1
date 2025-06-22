@@ -28,10 +28,10 @@ git clone https://github.com/Newsnest1/News-Nest1.git
 # git clone /path/to/News-Nest1
 
 cd News-Nest1
-# Create a .env file and copy the example configuration into it.
-# Then, replace the placeholder values with your actual secrets.
+# Copy the example environment file (includes built-in MeiliSearch key)
 cp .env.example .env
-nano .env
+# Optional: Add your NewsAPI key for additional news sources
+# nano .env  # Uncomment and add: NEWSAPI_KEY=your_newsapi_key_here
 docker compose up --build -d
 # Wait for containers to be healthy, then:
 curl http://localhost:8001/v1/feed | head
@@ -58,17 +58,19 @@ You can also access the web interface directly in your browser at [http://localh
 - Responsive design
 - Article categorization
 
-**Note:**  
-Create a `.env.example` file in the project root with the following content. This file should be committed to your repository.
+**Environment Setup:**
+The `.env.example` file contains all necessary configuration including the built-in MeiliSearch key. Simply copy it to `.env` and you're ready to go:
 
 ```
 POSTGRES_USER=news
 POSTGRES_PASSWORD=news
 POSTGRES_DB=news
-MEILI_MASTER_KEY=your_secure_meili_master_key
+MEILI_MASTER_KEY=70e6fe85e4c6480082c9d9bacb26052c  # Built-in, no external key needed
+# Optional: Add your NewsAPI key for additional news sources
+# NEWSAPI_KEY=your_newsapi_key_here
 ```
 
-Then create a `.env` file (`cp .env.example .env`) and replace the placeholder values. The `.env` file should be listed in your `.gitignore` and never be committed.
+**Note:** The `.env` file should be listed in your `.gitignore` and never be committed. The MeiliSearch key is built into the project and works immediately without any external API key registration.
 
 
 ---
