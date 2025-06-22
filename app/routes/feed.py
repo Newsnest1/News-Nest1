@@ -86,7 +86,8 @@ async def personalized_feed(
         outlet_match = len(followed_outlets) == 0 or article.source in followed_outlets
         
         # Include article if it matches the filtering criteria
-        if topic_match and outlet_match:
+        # Use OR logic: article must match either topics OR outlets (or both)
+        if topic_match or outlet_match:
             # Convert to dict and add saved status
             article_dict = {
                 "url": article.url,
