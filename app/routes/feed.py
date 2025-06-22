@@ -110,6 +110,20 @@ async def personalized_feed(
     }
 
 
+@router.post("/feed/populate-search-index")
+async def populate_search_index(
+    db: Session = Depends(get_db)
+):
+    """Manually populate the MeiliSearch index with articles from the database."""
+    try:
+        logger.info("Manually triggering search index population...")
+        await populate_meilisearch_index()
+        return {"message": "Search index populated successfully"}
+    except Exception as e:
+        logger.error(f"Error populating search index: {e}")
+        raise HTTPException(status_code=500, detail=f"Error populating search index: {str(e)}")
+
+
 @router.post("/feed/test-notifications")
 async def test_notifications(
     current_user: schemas.User = Depends(get_current_active_user),
