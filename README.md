@@ -25,12 +25,16 @@ News-Nest collects articles from public sources in near real-time, stores them i
 ```bash
 git clone https://github.com/Newsnest1/News-Nest1.git
 cd News-Nest1
-# Create a .env file with your settings (see below for required variables)
+# Create a .env file and copy the example configuration into it.
+# Then, replace the placeholder values with your actual secrets.
+cp .env.example .env
 nano .env
 docker compose up --build -d
 # Wait for containers to be healthy, then:
 curl http://localhost:8001/v1/feed | head
 ```
+
+You can also access the web interface directly in your browser at [http://localhost:8001/index.html#feed](http://localhost:8001/index.html#feed).
 
 **Default exposed ports:**
 - FastAPI: `8001`
@@ -46,14 +50,16 @@ curl http://localhost:8001/v1/feed | head
 | `/readyz` | readiness check |
 
 **Note:**  
-If you need to configure environment variables, create a `.env` file in the project root.  
-Example variables:
+Create a `.env.example` file in the project root with the following content. This file should be committed to your repository.
+
 ```
 POSTGRES_USER=news
-POSTGRES_PASSWORD=yourpassword
+POSTGRES_PASSWORD=news
 POSTGRES_DB=news
-MEILI_MASTER_KEY=yourmeilikey
+MEILI_MASTER_KEY=your_secure_meili_master_key
 ```
+
+Then create a `.env` file (`cp .env.example .env`) and replace the placeholder values. The `.env` file should be listed in your `.gitignore` and never be committed.
 
 
 ---
