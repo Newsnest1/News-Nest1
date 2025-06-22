@@ -24,6 +24,9 @@ News-Nest collects articles from public sources in near real-time, stores them i
 
 ```bash
 git clone https://github.com/Newsnest1/News-Nest1.git
+# Note: If the link fails, you can clone from a local path, e.g.:
+# git clone /path/to/News-Nest1
+
 cd News-Nest1
 # Create a .env file and copy the example configuration into it.
 # Then, replace the placeholder values with your actual secrets.
