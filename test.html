@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News-Nest1 Test</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1><i class="fas fa-newspaper"></i> News-Nest1</h1>
+                </div>
+                <nav class="nav">
+                    <ul class="nav-menu">
+                        <li><a href="#" class="nav-link active">Feed</a></li>
+                        <li><a href="#" class="nav-link">My Feed</a></li>
+                        <li><a href="#" class="nav-link">Search</a></li>
+                        <li><a href="#" class="nav-link">Saved</a></li>
+                    </ul>
+                </nav>
+                <div class="user-section">
+                    <div class="auth-buttons">
+                        <button class="btn btn-primary">Login</button>
+                        <button class="btn btn-secondary">Register</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="view active">
+                <div class="view-header">
+                    <h2>Latest News</h2>
+                    <div class="view-controls">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="articles-grid">
+                    <article class="article-card">
+                        <div class="article-header">
+                            <div class="article-meta">
+                                <span class="article-source">BBC News</span>
+                                <span class="article-category">Technology</span>
+                            </div>
+                            <h3 class="article-title">Sample Article Title</h3>
+                        </div>
+                        <div class="article-content">
+                            <p class="article-summary">This is a sample article summary to test the layout and styling.</p>
+                            <div class="article-actions">
+                                <button class="btn btn-secondary">
+                                    <i class="far fa-bookmark"></i> Save
+                                </button>
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-external-link-alt"></i> Read More
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        console.log('Test page loaded successfully!');
+        document.body.style.display = 'block';
+    </script>
+</body>
+</html> 

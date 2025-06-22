@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 import asyncio
 import time
@@ -9,7 +10,7 @@ from app.routes.ws import router as ws_router
 from app.routes.users import router as users_router
 from app.services.index_populator import populate_meilisearch_index
 from app.database import create_db_and_tables, SessionLocal
-from app.services.feed_service import get_latest_articles
+from app.services.feed_service import fetch_and_store_latest_articles
 from app.services.websocket_manager import manager
 from app.services.notification_service import send_personalized_notifications, send_broadcast_notification
 
@@ -20,6 +21,27 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="News Aggregator API")
+
+# Set up CORS middleware
+origins = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+    "*"  # Allow all origins for development
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
@@ -42,7 +64,7 @@ async def periodic_feed_update():
         logger.info("Running periodic feed update...")
         db = SessionLocal()
         try:
-            new_articles = await get_latest_articles(db=db, limit=100)
+            new_articles = await fetch_and_store_latest_articles(db=db, limit=100)
             if new_articles:
                 logger.info(f"Found {len(new_articles)} new articles. Sending personalized notifications...")
                 
@@ -82,7 +104,7 @@ async def startup_event():
         try:
             # Fetch initial articles and populate DB
             logger.info("Fetching initial articles...")
-            await get_latest_articles(db=db, limit=50)
+            await fetch_and_store_latest_articles(db=db, limit=50)
         finally:
             db.close()
         

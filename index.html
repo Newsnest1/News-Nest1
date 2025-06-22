@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News-Nest - Your Personalized News Feed</title>
+    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/pngs/solid/newspaper.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <a href="#" class="logo">News-Nest</a>
+            <nav class="main-nav">
+                <a href="#feed" class="nav-link active" data-view="feed">Feed</a>
+                <a href="#personalized" class="nav-link" data-view="personalized">Personalized</a>
+                <a href="#saved" class="nav-link" data-view="saved">Saved</a>
+            </nav>
+            <div class="header-actions">
+                <div class="search-bar">
+                    <input type="search" id="searchInput" placeholder="Search articles...">
+                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="user-menu">
+                    <button id="userToggle" class="user-toggle">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <div id="userDropdown" class="user-dropdown">
+                        <a href="#profile" id="profileLink" class="nav-link" data-view="profile">Profile</a>
+                        <a href="#preferences" id="managePreferences" class="nav-link" data-view="preferences">Preferences</a>
+                        <hr>
+                        <button id="loginBtn">Login</button>
+                        <button id="registerBtn">Register</button>
+                        <button id="logoutBtn" class="hidden">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="viewContainer">
+            <!-- Feed View -->
+            <div id="feedView" class="view active">
+                <div class="view-header">
+                    <h1>Latest News</h1>
+                    <div class="view-actions">
+                         <select id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <!-- Categories will be populated by JS -->
+                        </select>
+                        <button id="refreshFeed"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                </div>
+                <div id="articlesGrid" class="articles-grid"></div>
+            </div>
+
+            <!-- Personalized View -->
+            <div id="personalizedView" class="view">
+                 <h1>Your Feed</h1>
+                 <div id="personalizedGrid" class="articles-grid"></div>
+            </div>
+            
+            <!-- Saved Articles View -->
+            <div id="savedView" class="view">
+                <h1>Saved Articles</h1>
+                <div id="savedGrid" class="articles-grid"></div>
+            </div>
+
+            <!-- Search Results View -->
+            <div id="searchView" class="view">
+                <h1>Search Results</h1>
+                <div id="searchResults" class="articles-grid"></div>
+            </div>
+
+            <!-- Profile View -->
+            <div id="profileView" class="view">
+                <h1>Your Profile</h1>
+                <div class="profile-details">
+                    <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+                    <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+                </div>
+            </div>
+
+            <!-- Preferences View -->
+            <div id="preferencesView" class="view">
+                <h1>Preferences</h1>
+                <div class="preferences-container">
+                    <div class="preference-section">
+                        <h2>Followed Topics</h2>
+                        <ul id="followedTopicsList"></ul>
+                        <div class="add-preference">
+                            <input type="text" id="newTopicInput" placeholder="Add topic (e.g., 'AI')">
+                            <button id="followTopic">Follow</button>
+                        </div>
+                    </div>
+                    <div class="preference-section">
+                        <h2>Followed Outlets</h2>
+                        <ul id="followedOutletsList"></ul>
+                         <div class="add-preference">
+                            <input type="text" id="newOutletInput" placeholder="Add outlet domain (e.g., 'bbc.com')">
+                            <button id="followOutlet">Follow</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div id="modalOverlay" class="modal-overlay hidden">
+        <div id="modalContent" class="modal-content">
+            <button id="modalClose" class="modal-close">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+    <div id="loadingIndicator" class="loading-indicator hidden"><i class="fas fa-spinner fa-spin"></i></div>
+
+    <script src="js/app.js" type="module"></script>
+</body>
+</html> 

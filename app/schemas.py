@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import List, Optional
+from datetime import datetime
 
 class UserBase(BaseModel):
     username: str = Field(..., description="Unique username for the account", example="john_doe")
@@ -28,4 +29,22 @@ class Token(BaseModel):
     token_type: str = Field(..., description="Type of token (usually 'bearer')")
 
 class TokenData(BaseModel):
-    username: Optional[str] = Field(None, description="Username from token payload") 
+    username: Optional[str] = Field(None, description="Username from token payload")
+
+class ArticleBase(BaseModel):
+    url: str
+    title: str
+    source: str
+    content: Optional[str] = None
+    published_at: Optional[datetime] = None
+    category: Optional[str] = None
+    image_url: Optional[str] = None
+
+class ArticleCreate(ArticleBase):
+    pass
+
+class Article(ArticleBase):
+    is_saved: bool = False
+
+    class Config:
+        orm_mode = True 

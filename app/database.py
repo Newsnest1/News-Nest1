@@ -1,7 +1,7 @@
 import os
 from sqlalchemy import create_engine, Column, String, Text, DateTime, Integer, Boolean, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -35,6 +35,7 @@ class Article(Base):
     content = Column(Text, nullable=True)
     published_at = Column(DateTime, nullable=True)
     category = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
     comment = Column(String, nullable=True)
 
     def __repr__(self):
@@ -51,6 +52,8 @@ class User(Base):
     notifications_enabled = Column(Boolean, default=True)
     notify_topics = Column(Boolean, default=True)
     notify_outlets = Column(Boolean, default=True)
+    
+    saved_articles = relationship("UserSavedArticle", back_populates="user")
 
 
 class UserSavedArticle(Base):
@@ -59,6 +62,8 @@ class UserSavedArticle(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     article_url = Column(String, ForeignKey('articles.url'), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", back_populates="saved_articles")
 
 
 class UserTopic(Base):

@@ -22,7 +22,7 @@ class NewsNestUser(HttpUser):
         This is weighted to be called 3x more often than the main feed.
         """
         # A list of categories to choose from for the test
-        categories = ["Technology", "Sports", "Business", "Politics", "Weather"]
+        categories = ["Technology", "Sports", "Business", "Politics", "Weather", "Science", "Health", "Entertainment", "General"]
         import random
         category = random.choice(categories)
         self.client.get(f"/v1/feed?category={category}", name="/v1/feed?category=[category]") 

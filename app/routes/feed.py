@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from collections import defaultdict
 from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -16,98 +16,76 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["feed"])
 
 
-@router.get("/feed")
-async def feed(
+@router.get("/feed", response_model=List[schemas.Article])
+async def get_feed(
     db: Session = Depends(get_db),
     limit: int = Query(20, le=100),
-    category: Optional[str] = Query(
-        None, description="Optional category filter (e.g. Technology, Sports, etc.)"),
-    current_user: Optional[schemas.User] = Depends(get_current_optional_user)
+    category: Optional[str] = Query(None, description="Optional category filter.")
 ):
-    """Return articles grouped by category, or filtered by one category."""
+    """
+    Get the latest articles from the feed.
+    If a category is provided, it filters by that category.
+    """
     if category:
-        # Use MeiliSearch for typo-tolerant, case-insensitive category filtering
-        search_results = await search_articles(
-            q=category, 
-            limit=limit, 
-            attributes_to_search_on=['category']
-        )
-        
-        # Add saved status if user is authenticated
-        if current_user:
-            for article in search_results:
-                article['is_saved'] = crud.is_saved(db, current_user.id, article['url'])
-        else:
-            for article in search_results:
-                article['is_saved'] = False
-                
-        return {"items": search_results}
-
-    # If no category, get all articles and group them
-    articles = get_all_articles(db=db)
-    grouped = defaultdict(list)
-    for article in articles:
-        # Don't apply the limit here, group all and then slice if needed.
-        # This part could be further optimized if needed.
-        grouped[article.category].append(article)
-
-    # Limit the number of articles per category for the final output
-    for cat in grouped:
-        grouped[cat] = grouped[cat][:limit]
-        
-    return grouped
+        articles = crud.get_articles_by_category(db=db, category=category, limit=limit)
+    else:
+        articles = crud.get_articles(db=db, limit=limit)
+    
+    return articles
 
 
-@router.get("/feed/personalized")
-async def personalized_feed(
-    current_user: schemas.User = Depends(get_current_active_user),
+@router.get("/feed/categories")
+async def get_categories(db: Session = Depends(get_db)):
+    """
+    Get all available categories from the database.
+    """
+    categories = crud.get_categories(db=db)
+    return {"categories": categories}
+
+
+@router.get("/feed/personalized", response_model=List[schemas.Article])
+async def get_personalized_feed(
     db: Session = Depends(get_db),
     limit: int = Query(20, le=100)
 ):
-    """Return articles filtered by user's followed topics and outlets."""
-    # Get user's followed topics and outlets
-    followed_topics = crud.get_followed_topics(db, current_user.id)
-    followed_outlets = crud.get_followed_outlets(db, current_user.id)
+    """
+    Get personalized feed based on user's followed topics and outlets.
+    Note: This is a simplified version that returns all articles.
+    For full personalization, user authentication would be required.
+    """
+    # For now, return all articles as a simplified personalized feed
+    articles = crud.get_articles(db=db, limit=limit)
+    return articles
+
+
+@router.get("/feed/test")
+async def get_test_feed():
+    """
+    Get a test feed for development purposes.
+    """
+    from app.database import Article
     
-    if not followed_topics and not followed_outlets:
-        return {"items": [], "message": "No topics or outlets followed. Follow some to get personalized content!"}
-    
-    # Get all articles
-    all_articles = get_all_articles(db=db)
-    
-    # Filter articles based on follows
-    filtered_articles = []
-    for article in all_articles:
-        # Check if article matches followed topics or outlets
-        # If user follows topics, article must match a followed topic
-        # If user follows outlets, article must match a followed outlet
-        # If user follows both, article must match either
-        topic_match = len(followed_topics) == 0 or article.category in followed_topics
-        outlet_match = len(followed_outlets) == 0 or article.source in followed_outlets
-        
-        # Include article if it matches the filtering criteria
-        # Use OR logic: article must match either topics OR outlets (or both)
-        if topic_match or outlet_match:
-            # Convert to dict and add saved status
-            article_dict = {
-                "url": article.url,
-                "title": article.title,
-                "source": article.source,
-                "content": article.content,
-                "published_at": article.published_at.isoformat() if article.published_at else None,
-                "category": article.category,
-                "is_saved": crud.is_saved(db, current_user.id, article.url)
-            }
-            filtered_articles.append(article_dict)
-    
-    # Sort by published_at (newest first) and limit
-    filtered_articles.sort(key=lambda x: x["published_at"] or "", reverse=True)
-    filtered_articles = filtered_articles[:limit]
+    test_articles = [
+        Article(
+            url="https://example.com/1",
+            title="Test Article 1",
+            source="Test Source",
+            content="This is a test article about technology.",
+            category="Technology",
+            published_at=None
+        ),
+        Article(
+            url="https://example.com/2", 
+            title="Test Article 2",
+            source="Test Source",
+            content="This is a test article about business.",
+            category="Business",
+            published_at=None
+        )
+    ]
     
     return {
-        "items": filtered_articles,
-        "followed_topics": followed_topics,
-        "followed_outlets": followed_outlets
+        "articles": [{"title": a.title, "source": a.source, "category": a.category} for a in test_articles]
     }
 
 

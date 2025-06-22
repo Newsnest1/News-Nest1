@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
-from . import database, schemas
-from . import security
+from . import database, schemas, security
 
 def get_user_by_username(db: Session, username: str):
     return db.query(database.User).filter(database.User.username == username).first()
@@ -128,4 +127,18 @@ def delete_user(db: Session, user_id: int):
     # Delete the user
     db.query(database.User).filter(database.User.id == user_id).delete()
     db.commit()
-    return True 
+    return True
+
+def get_articles(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(database.Article).offset(skip).limit(limit).all()
+
+def get_articles_by_category(db: Session, category: str, skip: int = 0, limit: int = 100):
+    return db.query(database.Article).filter(database.Article.category == category).offset(skip).limit(limit).all()
+
+def get_all_articles(db: Session):
+    return db.query(database.Article).all()
+
+def get_categories(db: Session):
+    """Get all unique categories from the database."""
+    categories = db.query(database.Article.category).distinct().all()
+    return [cat[0] for cat in categories if cat[0]]  # Filter out None values 
