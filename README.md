@@ -23,25 +23,37 @@ News-Nest collects articles from public sources in near real-time, stores them i
 ## Quick start
 
 ```bash
-git clone https://github.com/Newsnest1/news-nest1.git
-cd news-nest1
-cp .env.example .env
+git clone https://github.com/Newsnest1/News-Nest1.git
+cd News-Nest1
+# Create a .env file with your settings (see below for required variables)
 nano .env
-nano docker-compose.yml
-Port 15432:5432
-"8000:8000"
 docker compose up --build -d
-curl http://localhost:8000/v1/feed | head
+# Wait for containers to be healthy, then:
+curl http://localhost:8001/v1/feed | head
 ```
 
-Available endpoints once the containers are up:
+**Default exposed ports:**
+- FastAPI: `8001`
+- Postgres: `5433`
+- MeiliSearch: `7701`
 
+**Endpoints:**
 | Path | Purpose |
 |------|---------|
 | `/v1/feed` | latest articles |
-| `/v1/search` | search (stub) |
+| `/v1/search` | search |
 | `/docs` | Swagger UI |
 | `/readyz` | readiness check |
+
+**Note:**  
+If you need to configure environment variables, create a `.env` file in the project root.  
+Example variables:
+```
+POSTGRES_USER=news
+POSTGRES_PASSWORD=yourpassword
+POSTGRES_DB=news
+MEILI_MASTER_KEY=yourmeilikey
+```
 
 
 ---
@@ -62,39 +74,27 @@ Available endpoints once the containers are up:
 The default `docker-compose.yml` starts three containers:
 
 ```
-fastapi  (port 8000)  ─┐
-postgres (port 5432)  ─┼─ internal Docker network
-meilisearch (7700)   ─┘
+fastapi  (port 8001)  ─┐
+postgres (port 5433)  ─┼─ internal Docker network
+meilisearch (7701)   ─┘
 ```
-
-There is also a `docker-compose.dev.yml` overlay that mounts the source tree
-and runs Uvicorn in reload mode for rapid iteration.
 
 Common commands:
 
 ```bash
-make build        # docker compose build
-make up           # start production-style stack
-make down         # stop containers
-make dev-up       # start dev stack with code hot-reload
-make logs         # tail all service logs
-make test         # run pytest in container
+docker compose build        # Build the images
+docker compose up -d        # Start the stack in detached mode
+docker compose down         # Stop containers
+docker compose logs         # Tail all service logs
 ```
 
 ---
 
 ## Development workflow
 
-Docker dev stack 
-
-```bash
-make dev-up
-make dev-logs     
-make dev-down
-
-```
-
-You will still need Postgres and MeiliSearch running locally or in Docker.
+- Use the Docker Compose stack for local development.
+- Edit your code and restart the relevant service if needed.
+- You will still need Postgres and MeiliSearch running locally or in Docker.
 
 ---
 
