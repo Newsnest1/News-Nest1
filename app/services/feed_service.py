@@ -24,27 +24,30 @@ async def get_latest_articles(db: Session, limit: int = 20):
     # Sort by published_at descending
     articles.sort(key=lambda x: x.get("published_at", ""), reverse=True)
 
+    # Check which articles already exist in the database
+    article_urls = [art["url"] for art in articles]
+    existing_urls = {
+        res[0] for res in db.query(Article.url).filter(Article.url.in_(article_urls))
+    }
+
     new_articles_to_add = []
     new_articles_to_return = []
     
-    for art in articles:
-        # Check if article already exists in the DB
-        exists = db.query(Article).filter(Article.url == art["url"]).first()
-        if not exists:
-            # Categorize only if the category is not already provided by the adapter
-            if "category" not in art or not art["category"]:
-                art["category"] = categorize_article(art)
+    for article_data in articles:
+        if article_data["url"] not in existing_urls:
+            # First, categorize the article
+            category = categorize_article(article_data["title"], article_data.get("summary", ""))
             
             new_article = Article(
-                url=art["url"],
-                title=art["title"],
-                source=art["source"],
-                content=art.get("content"),
-                published_at=datetime.fromisoformat(art["published_at"].replace("Z", "+00:00")) if art.get("published_at") else None,
-                category=art["category"],
+                url=article_data["url"],
+                title=article_data["title"],
+                source=article_data["source"],
+                content=article_data.get("summary", ""),
+                published_at=datetime.fromisoformat(article_data["published_at"].replace("Z", "+00:00")),
+                category=category, # Use the determined category
             )
             new_articles_to_add.append(new_article)
-            new_articles_to_return.append(art)
+            new_articles_to_return.append(article_data)
 
     if new_articles_to_add:
         db.add_all(new_articles_to_add)

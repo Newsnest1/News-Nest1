@@ -3,17 +3,25 @@ from sqlalchemy import create_engine, Column, String, Text, DateTime, Integer, B
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
+from dotenv import load_dotenv
 
-# Database credentials from environment variables
-DB_USER = os.environ.get("POSTGRES_USER", "news")
-DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "news")
-DB_HOST = os.environ.get("POSTGRES_HOST", "db")  # 'db' is the service name in docker-compose
-DB_PORT = os.environ.get("POSTGRES_PORT", "5432")
-DB_NAME = os.environ.get("POSTGRES_DB", "news")
+load_dotenv()
 
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# Default to the development database URL
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/newsdb")
 
-engine = create_engine(DATABASE_URL)
+# Allow overriding for tests
+if os.getenv("TESTING"):
+    SQLALCHEMY_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///./test.db")
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
+# For SQLite, we need to add a special connect_args
+if "sqlite" in SQLALCHEMY_DATABASE_URL:
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

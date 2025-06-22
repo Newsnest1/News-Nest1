@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
@@ -45,4 +45,29 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 async def get_current_active_user(current_user: schemas.User = Depends(get_current_user)):
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user 
+    return current_user
+
+async def get_current_optional_user(request: Request, db: Session = Depends(get_db)) -> Optional[schemas.User]:
+    """
+    A dependency that returns the current user if a valid token is provided,
+    or None if the token is missing or invalid. Does not raise an error.
+    """
+    token = request.headers.get("Authorization")
+    if token:
+        # Expected format: "Bearer <token>"
+        parts = token.split()
+        if len(parts) == 2 and parts[0] == "Bearer":
+            token = parts[1]
+            try:
+                # This reuses the logic from get_current_user but without the auto_error
+                payload = jwt.decode(token, security.SECRET_KEY, algorithms=[security.ALGORITHM])
+                username: str = payload.get("sub")
+                if username is None:
+                    return None
+                user = crud.get_user_by_username(db, username=username)
+                return user
+            except JWTError:
+                # Token is invalid
+                return None
+    # No token provided
+    return None 

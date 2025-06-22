@@ -6,6 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.database import Base, get_db, Article
+from app import crud
+from app.services.feed_service import get_latest_articles
 
 # Use an in-memory SQLite database for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -31,24 +33,34 @@ def override_get_db(test_db):
     app.dependency_overrides.clear()
 
 @pytest.mark.asyncio
-async def test_feed_endpoint_populates_db(mocker, test_db):
-    # Mock the external API calls to avoid actual network requests
+async def test_get_latest_articles_populates_db(mocker, db_session):
+    """
+    Test that the get_latest_articles service function correctly fetches
+    articles from adapters and saves them to the database.
+    """
+    # 1. Mock the external API calls
     mock_newsapi_articles = [
-        {"title": "Test Article 1", "url": "http://test.com/1", "source": "Test Source", "published_at": "2023-01-01T12:00:00Z", "content": "Test content 1"}
+        {"title": "NewsAPI Article", "url": "http://test.com/newsapi", "source": "NewsAPI", "published_at": "2023-01-01T12:00:00Z", "content": "Content"}
     ]
     mock_rss_articles = [
-        {"title": "Test Article 2", "url": "http://test.com/2", "source": "Test Source", "published_at": "2023-01-01T13:00:00Z", "content": "Test content 2"}
+        {"title": "RSS Article", "url": "http://test.com/rss", "source": "RSS Feed", "published_at": "2023-01-01T13:00:00Z", "content": "Content"}
     ]
 
-    mocker.patch('app.services.feed_service.fetch_newsapi_articles', new_callable=AsyncMock, return_value=mock_newsapi_articles)
-    mocker.patch('app.services.feed_service.fetch_rss_articles', new_callable=AsyncMock, return_value=mock_rss_articles)
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get("/v1/feed")
-
-    assert response.status_code == 200
+    mocker.patch('app.services.feed_service.fetch_newsapi_articles', return_value=mock_newsapi_articles)
+    mocker.patch('app.services.feed_service.fetch_rss_articles', return_value=mock_rss_articles)
     
-    articles_in_db = test_db.query(Article).order_by(Article.published_at.desc()).all()
+    # 2. Mock the categorization service where it is imported and used
+    mocker.patch('app.services.feed_service.categorize_article', return_value="Technology")
+
+    # 3. Call the service function directly
+    new_articles = await get_latest_articles(db=db_session, limit=10)
+
+    # 4. Assert the results
+    assert len(new_articles) == 2
+    
+    # Verify articles were actually written to the test DB
+    articles_in_db = db_session.query(Article).all()
     assert len(articles_in_db) == 2
-    assert articles_in_db[0].title == "Test Article 2"
-    assert articles_in_db[1].title == "Test Article 1"
+    assert articles_in_db[0].title == "RSS Article" # Sorted by date
+    assert articles_in_db[1].title == "NewsAPI Article"
+    assert articles_in_db[0].category == "Technology"

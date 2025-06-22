@@ -1,7 +1,8 @@
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import logging
 import asyncio
+import time
 from app.routes.feed import router as feed_router
 from app.routes.search import router as search_router
 from app.routes.ws import router as ws_router
@@ -19,6 +20,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="News Aggregator API")
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    logger.info(f"Request {request.method} {request.url.path} processed in {process_time:.4f} seconds")
+    return response
 
 app.include_router(feed_router, prefix="/v1")
 app.include_router(search_router, prefix="/v1")

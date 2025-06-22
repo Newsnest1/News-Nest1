@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.services.feed_service import get_all_articles, get_latest_articles
 from app.services.search_service import search_articles
 from app.database import get_db
-from app.services.auth_service import get_current_active_user, oauth2_scheme
+from app.services.auth_service import get_current_active_user, oauth2_scheme, get_current_user, get_current_optional_user
 from app import crud, schemas
 from app.services.notification_service import send_personalized_notifications, send_broadcast_notification
 from app.services.index_populator import populate_meilisearch_index
@@ -16,24 +16,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["feed"])
 
 
-async def get_optional_user(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    """Get current user if token is provided, otherwise return None."""
-    if token is None:
-        return None
-    try:
-        from app.services.auth_service import get_current_user
-        return await get_current_user(token=token, db=db)
-    except HTTPException:
-        return None
-
-
 @router.get("/feed")
 async def feed(
     db: Session = Depends(get_db),
     limit: int = Query(20, le=100),
     category: Optional[str] = Query(
         None, description="Optional category filter (e.g. Technology, Sports, etc.)"),
-    current_user: Optional[schemas.User] = Depends(get_optional_user)
+    current_user: Optional[schemas.User] = Depends(get_current_optional_user)
 ):
     """Return articles grouped by category, or filtered by one category."""
     if category:
