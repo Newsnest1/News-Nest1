@@ -154,6 +154,25 @@ ruff app
 
 ---
 
+## Project Requirements
+
+### Functional Requirements (Must-Haves)
+
+- **FR-01:** Collect articles from NewsAPI and any number of RSS feeds.
+- **FR-02:** Categorise each article into Sports, Technology, Politics, Weather, Business or Other.
+- **FR-03:** Full-text search of headline and summary.
+- **FR-04:** Filter feed by category parameter.
+- **FR-05:** WebSocket push – notify clients when the feed is refreshed.
+
+### Nice-to-Have Features
+
+- Favorize articles.
+- Provide a function to follow news outlets, reporters, or categories.
+- Push Notifications.
+- Allow users to create an account.
+
+---
+
 ## User Features
 
 ### Save Articles
