@@ -140,16 +140,21 @@ The project follows a hexagonal design separated into six layers.
 
 ## Testing and quality
 
-* **Unit & integration tests:** `pytest` in `tests/`
-* **Static checks:** `ruff` (lint) and `black` (format)
-* **CI:** GitHub Actions workflow in `.github/workflows/ci.yml`
+- **Unit & integration tests:** `pytest` in `tests/`
+- **Static checks:** `ruff` (linting)
+- **CI:** GitHub Actions workflow in `.github/workflows/ci.yml`
 
-Run everything locally:
+Run checks locally:
 
 ```bash
+# Lint with ruff
+ruff check .
+
+# Run tests with pytest
 pytest -q
-ruff app
 ```
+
+**Note:** The test suite requires a running PostgreSQL database. Refer to the CI workflow (`.github/workflows/ci.yml`) for an example of how to set one up.
 
 
 ---
