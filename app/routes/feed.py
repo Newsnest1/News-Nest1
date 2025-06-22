@@ -79,10 +79,14 @@ async def personalized_feed(
     filtered_articles = []
     for article in all_articles:
         # Check if article matches followed topics or outlets
-        topic_match = not followed_topics or article.category in followed_topics
-        outlet_match = not followed_outlets or article.source in followed_outlets
+        # If user follows topics, article must match a followed topic
+        # If user follows outlets, article must match a followed outlet
+        # If user follows both, article must match either
+        topic_match = len(followed_topics) == 0 or article.category in followed_topics
+        outlet_match = len(followed_outlets) == 0 or article.source in followed_outlets
         
-        if topic_match or outlet_match:
+        # Include article if it matches the filtering criteria
+        if topic_match and outlet_match:
             # Convert to dict and add saved status
             article_dict = {
                 "url": article.url,
