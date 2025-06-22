@@ -1,9 +1,10 @@
 import meilisearch
+import os
 from typing import List, Optional
 
 client = meilisearch.Client(
     "http://search:7700",
-    "79218197551724857046"  # ← new key!
+    os.getenv("MEILI_MASTER_KEY", "your_secure_meili_master_key")
 )
 
 INDEX_NAME = "articles"

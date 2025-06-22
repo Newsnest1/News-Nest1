@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>News-Nest - Your Personalized News Feed</title>
-    <link rel="icon" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/pngs/solid/newspaper.png" type="image/png">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📰</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles/main.css">
@@ -12,35 +12,64 @@
     <link rel="stylesheet" href="styles/responsive.css">
 </head>
 <body>
-    <header class="main-header">
+    <header class="header">
         <div class="container">
-            <a href="#" class="logo">News-Nest</a>
-            <nav class="main-nav">
-                <a href="#feed" class="nav-link active" data-view="feed">Feed</a>
-                <a href="#personalized" class="nav-link" data-view="personalized">Personalized</a>
-                <a href="#saved" class="nav-link" data-view="saved">Saved</a>
-            </nav>
-            <div class="header-actions">
-                <div class="search-bar">
-                    <input type="search" id="searchInput" placeholder="Search articles...">
-                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+            <div class="header-content">
+                <div class="logo">
+                    <h1><i class="fas fa-newspaper"></i> News Nest</h1>
                 </div>
-                <div class="user-menu">
-                    <button id="userToggle" class="user-toggle">
-                        <i class="fas fa-user"></i>
+                
+                <div class="search-section">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="search" id="searchInput" class="search-input" placeholder="Search for articles, topics, or sources...">
+                        <button id="searchBtn" class="search-btn">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
                     </button>
-                    <div id="userDropdown" class="user-dropdown">
-                        <a href="#profile" id="profileLink" class="nav-link" data-view="profile">Profile</a>
-                        <a href="#preferences" id="managePreferences" class="nav-link" data-view="preferences">Preferences</a>
-                        <hr>
-                        <button id="loginBtn">Login</button>
-                        <button id="registerBtn">Register</button>
-                        <button id="logoutBtn" class="hidden">Logout</button>
+                    <div class="user-menu">
+                        <button id="userToggle" class="user-toggle">
+                            <i class="fas fa-user"></i>
+                            <span class="user-text">Account</span>
+                        </button>
+                        <div id="userDropdown" class="dropdown-menu">
+                            <a href="#profile" id="profileLink" class="nav-link" data-view="profile">Profile</a>
+                            <a href="#preferences" id="managePreferences" class="nav-link" data-view="preferences">Preferences</a>
+                            <hr>
+                            <button id="loginBtn">Login</button>
+                            <button id="registerBtn">Register</button>
+                            <button id="logoutBtn" class="hidden">Logout</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul class="nav-menu">
+                <li><a href="#feed" class="nav-link active" data-view="feed">
+                    <i class="fas fa-home"></i> Home Feed
+                </a></li>
+                <li><a href="#personalized" class="nav-link" data-view="personalized">
+                    <i class="fas fa-user-check"></i> Personalized
+                </a></li>
+                <li><a href="#saved" class="nav-link" data-view="saved">
+                    <i class="fas fa-bookmark"></i> Saved Articles
+                </a></li>
+                <li><a href="#search" class="nav-link" data-view="search">
+                    <i class="fas fa-search"></i> Search
+                </a></li>
+            </ul>
+        </div>
+    </nav>
 
     <main class="container">
         <div id="viewContainer">
@@ -57,6 +86,12 @@
                     </div>
                 </div>
                 <div id="articlesGrid" class="articles-grid"></div>
+                <div class="load-more-container">
+                    <button id="loadMoreBtn" class="load-more-btn">
+                        <i class="fas fa-plus"></i>
+                        Load More Articles
+                    </button>
+                </div>
             </div>
 
             <!-- Personalized View -->
@@ -88,25 +123,7 @@
 
             <!-- Preferences View -->
             <div id="preferencesView" class="view">
-                <h1>Preferences</h1>
-                <div class="preferences-container">
-                    <div class="preference-section">
-                        <h2>Followed Topics</h2>
-                        <ul id="followedTopicsList"></ul>
-                        <div class="add-preference">
-                            <input type="text" id="newTopicInput" placeholder="Add topic (e.g., 'AI')">
-                            <button id="followTopic">Follow</button>
-                        </div>
-                    </div>
-                    <div class="preference-section">
-                        <h2>Followed Outlets</h2>
-                        <ul id="followedOutletsList"></ul>
-                         <div class="add-preference">
-                            <input type="text" id="newOutletInput" placeholder="Add outlet domain (e.g., 'bbc.com')">
-                            <button id="followOutlet">Follow</button>
-                        </div>
-                    </div>
-                </div>
+                <!-- Content will be dynamically rendered by JavaScript -->
             </div>
         </div>
     </main>

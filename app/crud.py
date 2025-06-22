@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from . import database, schemas, security
+from sqlalchemy import or_, and_, desc, func
 
 def get_user_by_username(db: Session, username: str):
     return db.query(database.User).filter(database.User.username == username).first()
@@ -141,4 +142,82 @@ def get_all_articles(db: Session):
 def get_categories(db: Session):
     """Get all unique categories from the database."""
     categories = db.query(database.Article.category).distinct().all()
-    return [cat[0] for cat in categories if cat[0]]  # Filter out None values 
+    return [cat[0] for cat in categories if cat[0]]  # Filter out None values
+
+def get_sources(db: Session):
+    """Get all unique sources from the database."""
+    sources = db.query(database.Article.source).distinct().all()
+    return [src[0] for src in sources if src[0]]  # Filter out None values
+
+def update_article_category(db: Session, article_id: int, new_category: str):
+    """Update the category of an article."""
+    article = db.query(database.Article).filter(database.Article.id == article_id).first()
+    if article:
+        article.category = new_category
+        db.commit()
+        db.refresh(article)
+        return article
+    return None
+
+def get_personalized_articles(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+    """
+    Get personalized articles based on user's followed topics and outlets.
+    Articles are prioritized by:
+    1. Articles matching followed topics (in title/content/category)
+    2. Articles from followed outlets
+    3. Recent articles as fallback
+    """
+    # Get user's followed topics and outlets
+    followed_topics = get_followed_topics(db, user_id)
+    followed_outlets = get_followed_outlets(db, user_id)
+    
+    if not followed_topics and not followed_outlets:
+        # If user has no preferences, return recent articles
+        return get_articles(db, skip, limit)
+    
+    # Build query for personalized articles
+    query = db.query(database.Article)
+    
+    # Create conditions for topic matching (case-insensitive)
+    topic_conditions = []
+    for topic in followed_topics:
+        if topic and topic.strip():  # Skip empty topics
+            topic_lower = topic.lower().strip()
+            topic_conditions.append(
+                or_(
+                    func.lower(database.Article.title).contains(topic_lower),
+                    func.lower(database.Article.content).contains(topic_lower),
+                    func.lower(database.Article.category).contains(topic_lower)
+                )
+            )
+    
+    # Create conditions for outlet matching (case-insensitive)
+    outlet_conditions = []
+    for outlet in followed_outlets:
+        if outlet and outlet.strip():  # Skip empty outlets
+            outlet_lower = outlet.lower().strip()
+            outlet_conditions.append(
+                or_(
+                    func.lower(database.Article.source).contains(outlet_lower),
+                    func.lower(database.Article.source_name).contains(outlet_lower)
+                )
+            )
+    
+    # Combine all conditions
+    all_conditions = []
+    if topic_conditions:
+        all_conditions.append(or_(*topic_conditions))
+    if outlet_conditions:
+        all_conditions.append(or_(*outlet_conditions))
+    
+    if all_conditions:
+        query = query.filter(or_(*all_conditions))
+    else:
+        # If no valid conditions, return recent articles
+        return get_articles(db, skip, limit)
+    
+    # Order by published date (most recent first)
+    query = query.order_by(desc(database.Article.published_at))
+    
+    # Apply pagination
+    return query.offset(skip).limit(limit).all() 

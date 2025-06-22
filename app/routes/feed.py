@@ -43,18 +43,26 @@ async def get_categories(db: Session = Depends(get_db)):
     return {"categories": categories}
 
 
+@router.get("/feed/sources")
+async def get_sources(db: Session = Depends(get_db)):
+    """
+    Get all available sources from the database.
+    """
+    sources = crud.get_sources(db=db)
+    return {"sources": sources}
+
+
 @router.get("/feed/personalized", response_model=List[schemas.Article])
 async def get_personalized_feed(
+    current_user: schemas.User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
     limit: int = Query(20, le=100)
 ):
     """
     Get personalized feed based on user's followed topics and outlets.
-    Note: This is a simplified version that returns all articles.
-    For full personalization, user authentication would be required.
+    Requires user authentication.
     """
-    # For now, return all articles as a simplified personalized feed
-    articles = crud.get_articles(db=db, limit=limit)
+    articles = crud.get_personalized_articles(db=db, user_id=current_user.id, limit=limit)
     return articles
 
 

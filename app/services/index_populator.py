@@ -7,7 +7,7 @@ from app.database import SessionLocal
 import meilisearch
 
 logger = logging.getLogger(__name__)
-client = meilisearch.Client("http://search:7700", "79218197551724857046")
+client = meilisearch.Client("http://search:7700", os.getenv("MEILI_MASTER_KEY", "a_master_key"))
 
 def sanitize_id(url):
     """Convert URL to a valid MeiliSearch document ID by using a hash."""

@@ -1,6 +1,8 @@
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import logging
 import asyncio
 import time
@@ -13,6 +15,9 @@ from app.database import create_db_and_tables, SessionLocal
 from app.services.feed_service import fetch_and_store_latest_articles
 from app.services.websocket_manager import manager
 from app.services.notification_service import send_personalized_notifications, send_broadcast_notification
+from app.services.categorization import recategorize_existing_articles
+import app.crud as crud
+from app.schemas import ArticleResponse
 
 load_dotenv()
 
@@ -21,6 +26,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="News Aggregator API")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory=".", html=True), name="static")
+app.mount("/styles", StaticFiles(directory="styles"), name="styles")
+app.mount("/js", StaticFiles(directory="js"), name="js")
 
 # Set up CORS middleware
 origins = [
@@ -55,7 +65,19 @@ async def add_process_time_header(request: Request, call_next):
 app.include_router(feed_router, prefix="/v1")
 app.include_router(search_router, prefix="/v1")
 app.include_router(users_router, prefix="/v1")
-app.include_router(ws_router)
+app.include_router(ws_router, prefix="/v1")
+
+@app.get("/")
+async def read_index():
+    return FileResponse("index.html")
+
+@app.get("/index.html")
+async def read_index_html():
+    return FileResponse("index.html")
+
+@app.get("/favicon.ico")
+async def get_favicon():
+    return {"message": "No favicon"}
 
 async def periodic_feed_update():
     """Periodically fetches new articles and sends personalized notifications."""
@@ -131,3 +153,40 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Error during startup: {e}")
         raise
+
+@app.post("/api/admin/recategorize")
+async def recategorize_articles():
+    """Recategorize all existing articles with improved categorization logic."""
+    try:
+        updated_count = await recategorize_existing_articles()
+        return {"message": f"Successfully recategorized {updated_count} articles", "updated_count": updated_count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to recategorize articles: {str(e)}")
+
+@app.get("/api/articles")
+async def get_articles(page: int = 1, limit: int = 20, category: str = None):
+    """Get articles with pagination and optional category filtering."""
+    db = SessionLocal()
+    try:
+        skip = (page - 1) * limit
+        if category:
+            articles = crud.get_articles_by_category(db, category, skip, limit)
+        else:
+            articles = crud.get_articles(db, skip, limit)
+        return {"articles": [ArticleResponse.from_orm(a).dict() for a in articles]}
+    finally:
+        db.close()
+
+@app.get("/v1/articles")
+async def get_articles_v1(page: int = 1, limit: int = 20, category: str = None):
+    """Get articles with pagination and optional category filtering (v1 endpoint)."""
+    db = SessionLocal()
+    try:
+        skip = (page - 1) * limit
+        if category:
+            articles = crud.get_articles_by_category(db, category, skip, limit)
+        else:
+            articles = crud.get_articles(db, skip, limit)
+        return {"articles": [ArticleResponse.from_orm(a).dict() for a in articles]}
+    finally:
+        db.close()

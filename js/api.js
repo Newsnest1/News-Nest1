@@ -45,6 +45,11 @@ export class API {
         return response.categories;
     }
 
+    async getSources() {
+        const response = await this.request('/feed/sources');
+        return response.sources;
+    }
+
     async getPersonalizedFeed() {
         const response = await this.request('/feed/personalized', { headers: this.getHeaders() });
         return response;
@@ -55,9 +60,39 @@ export class API {
         return response;
     }
 
-    async searchArticles(query) {
-        const response = await this.request(`/search?q=${encodeURIComponent(query)}`);
-        return response.items;
+    async getArticles(page = 1, category = '') {
+        try {
+            let url = `${this.baseUrl}/articles?page=${page}&limit=20`;
+            if (category) {
+                url += `&category=${encodeURIComponent(category)}`;
+            }
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.articles || [];
+        } catch (error) {
+            console.error('Error fetching articles:', error);
+            throw error;
+        }
+    }
+
+    async searchArticles(query, page = 1) {
+        try {
+            const response = await fetch(`${this.baseUrl}/search?q=${encodeURIComponent(query)}&page=${page}&limit=20`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.articles || [];
+        } catch (error) {
+            console.error('Error searching articles:', error);
+            throw error;
+        }
     }
 
     async followTopic(topic) {

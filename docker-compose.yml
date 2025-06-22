@@ -7,6 +7,9 @@ services:
       - .:/app
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
     depends_on:
       db:
         condition: service_healthy
@@ -29,6 +32,8 @@ services:
     image: getmeili/meilisearch:v1.4
     env_file:
       - .env
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
     ports:
       - "7701:7700"
     healthcheck:

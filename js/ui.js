@@ -10,6 +10,54 @@ export class UI {
         document.getElementById('modalOverlay').addEventListener('click', (e) => {
             if (e.target.id === 'modalOverlay') this.hideModal();
         });
+
+        // Initialize theme
+        this.initTheme();
+    }
+
+    initTheme() {
+        const themeToggle = document.getElementById('themeToggle');
+        if (!themeToggle) {
+            console.warn('Theme toggle button not found');
+            return;
+        }
+        
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        
+        // Set initial theme
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        this.updateThemeIcon(savedTheme);
+        
+        // Remove any existing event listeners to prevent duplicates
+        themeToggle.removeEventListener('click', this.handleThemeToggle);
+        
+        // Add event listener with proper binding
+        this.handleThemeToggle = this.handleThemeToggle.bind(this);
+        themeToggle.addEventListener('click', this.handleThemeToggle);
+    }
+
+    handleThemeToggle() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        this.updateThemeIcon(newTheme);
+        
+        console.log('Theme switched to:', newTheme); // Debug log
+    }
+
+    updateThemeIcon(theme) {
+        const themeToggle = document.getElementById('themeToggle');
+        const icon = themeToggle.querySelector('i');
+        
+        if (theme === 'dark') {
+            icon.className = 'fas fa-sun';
+            themeToggle.title = 'Switch to light mode';
+        } else {
+            icon.className = 'fas fa-moon';
+            themeToggle.title = 'Switch to dark mode';
+        }
     }
 
     createArticleCard(article) {
@@ -102,11 +150,22 @@ export class UI {
     }
 
     showToast(message, type = 'info') {
-        this.toastContainer.textContent = message;
+        const icons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-exclamation-circle',
+            warning: 'fas fa-exclamation-triangle',
+            info: 'fas fa-info-circle'
+        };
+        
+        this.toastContainer.innerHTML = `
+            <i class="${icons[type]} toast-icon"></i>
+            <span>${message}</span>
+        `;
         this.toastContainer.className = `toast show ${type}`;
+        
         setTimeout(() => {
             this.toastContainer.className = this.toastContainer.className.replace('show', '');
-        }, 3000);
+        }, 4000);
     }
 
     updateUIForUser(username) {
@@ -172,5 +231,328 @@ export class UI {
             // This will be handled by the app
             window.app.unfollowOutlet(outlet);
         });
+    }
+
+    // Enhanced Modal Functions
+    showLoginModal() {
+        this.modalBody.innerHTML = `
+            <div class="modal-header">
+                <h2><i class="fas fa-sign-in-alt"></i> Login to News Nest</h2>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail">
+                            <i class="fas fa-envelope"></i> Email Address
+                        </label>
+                        <input 
+                            type="email" 
+                            id="loginEmail" 
+                            name="email" 
+                            placeholder="Enter your email address"
+                            required
+                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                            title="Please enter a valid email address"
+                        >
+                        <div class="input-feedback"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <div class="password-input-container">
+                            <input 
+                                type="password" 
+                                id="loginPassword" 
+                                name="password" 
+                                placeholder="Enter your password"
+                                required
+                                minlength="6"
+                                title="Password must be at least 6 characters"
+                            >
+                            <button type="button" class="password-toggle" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'; this.innerHTML = this.previousElementSibling.type === 'password' ? '<i class=\\'fas fa-eye\\'></i>' : '<i class=\\'fas fa-eye-slash\\'></i>'">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="input-feedback"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').classList.remove('show')">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="#" onclick="app.ui.showRegisterModal(); return false;">Register here</a></p>
+                </div>
+            </div>
+        `;
+        
+        this.showModal();
+        this.setupFormValidation('loginForm');
+    }
+
+    showRegisterModal() {
+        this.modalBody.innerHTML = `
+            <div class="modal-header">
+                <h2><i class="fas fa-user-plus"></i> Create Account</h2>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="registerUsername">
+                            <i class="fas fa-user"></i> Username
+                        </label>
+                        <input 
+                            type="text" 
+                            id="registerUsername" 
+                            name="username" 
+                            placeholder="Choose a username"
+                            required
+                            minlength="3"
+                            maxlength="30"
+                            pattern="[a-zA-Z0-9_-]+"
+                            title="Username can only contain letters, numbers, hyphens, and underscores"
+                        >
+                        <div class="input-feedback"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerEmail">
+                            <i class="fas fa-envelope"></i> Email Address
+                        </label>
+                        <input 
+                            type="email" 
+                            id="registerEmail" 
+                            name="email" 
+                            placeholder="Enter your email address"
+                            required
+                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                            title="Please enter a valid email address"
+                        >
+                        <div class="input-feedback"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerPassword">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <div class="password-input-container">
+                            <input 
+                                type="password" 
+                                id="registerPassword" 
+                                name="password" 
+                                placeholder="Create a strong password"
+                                required
+                                minlength="8"
+                                title="Password must be at least 8 characters"
+                            >
+                            <button type="button" class="password-toggle" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'; this.innerHTML = this.previousElementSibling.type === 'password' ? '<i class=\\'fas fa-eye\\'></i>' : '<i class=\\'fas fa-eye-slash\\'></i>'">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="passwordStrength"></div>
+                        <div class="input-feedback"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">
+                            <i class="fas fa-lock"></i> Confirm Password
+                        </label>
+                        <div class="password-input-container">
+                            <input 
+                                type="password" 
+                                id="confirmPassword" 
+                                name="confirmPassword" 
+                                placeholder="Confirm your password"
+                                required
+                                title="Please confirm your password"
+                            >
+                            <button type="button" class="password-toggle" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'; this.innerHTML = this.previousElementSibling.type === 'password' ? '<i class=\\'fas fa-eye\\'></i>' : '<i class=\\'fas fa-eye-slash\\'></i>'">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="input-feedback"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal-overlay').classList.remove('show')">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="#" onclick="app.ui.showLoginModal(); return false;">Login here</a></p>
+                </div>
+            </div>
+        `;
+        
+        this.showModal();
+        this.setupFormValidation('registerForm');
+        this.setupPasswordStrength('registerPassword');
+    }
+
+    setupFormValidation(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+        
+        const inputs = form.querySelectorAll('input[required]');
+        
+        inputs.forEach(input => {
+            input.addEventListener('blur', () => this.validateField(input));
+            input.addEventListener('input', () => this.clearFieldError(input));
+        });
+        
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (this.validateForm(form)) {
+                this.handleFormSubmit(form);
+            }
+        });
+    }
+
+    setupPasswordStrength(passwordId) {
+        const passwordInput = document.getElementById(passwordId);
+        const strengthIndicator = document.getElementById('passwordStrength');
+        
+        if (passwordInput && strengthIndicator) {
+            passwordInput.addEventListener('input', () => {
+                const password = passwordInput.value;
+                const strength = this.calculatePasswordStrength(password);
+                this.updatePasswordStrength(strengthIndicator, strength);
+            });
+        }
+    }
+
+    calculatePasswordStrength(password) {
+        let score = 0;
+        let feedback = [];
+        
+        if (password.length >= 8) score += 1;
+        else feedback.push('At least 8 characters');
+        
+        if (/[a-z]/.test(password)) score += 1;
+        else feedback.push('Lowercase letter');
+        
+        if (/[A-Z]/.test(password)) score += 1;
+        else feedback.push('Uppercase letter');
+        
+        if (/[0-9]/.test(password)) score += 1;
+        else feedback.push('Number');
+        
+        if (/[^A-Za-z0-9]/.test(password)) score += 1;
+        else feedback.push('Special character');
+        
+        return { score, feedback };
+    }
+
+    updatePasswordStrength(indicator, strength) {
+        const levels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+        const colors = ['#ef4444', '#f59e0b', '#eab308', '#10b981', '#059669'];
+        
+        indicator.innerHTML = `
+            <div class="strength-bar">
+                <div class="strength-fill" style="width: ${(strength.score / 5) * 100}%; background-color: ${colors[strength.score - 1] || '#e5e7eb'}"></div>
+            </div>
+            <span class="strength-text" style="color: ${colors[strength.score - 1] || '#6b7280'}">
+                ${levels[strength.score - 1] || 'Very Weak'}
+            </span>
+        `;
+    }
+
+    validateField(input) {
+        const feedback = input.parentElement.querySelector('.input-feedback');
+        let isValid = true;
+        let message = '';
+        
+        // Check required
+        if (input.required && !input.value.trim()) {
+            isValid = false;
+            message = 'This field is required';
+        }
+        
+        // Check email pattern
+        if (input.type === 'email' && input.value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(input.value)) {
+                isValid = false;
+                message = 'Please enter a valid email address';
+            }
+        }
+        
+        // Check password confirmation
+        if (input.id === 'confirmPassword') {
+            const password = document.getElementById('registerPassword');
+            if (password && input.value !== password.value) {
+                isValid = false;
+                message = 'Passwords do not match';
+            }
+        }
+        
+        // Check pattern
+        if (input.pattern && input.value) {
+            const regex = new RegExp(input.pattern);
+            if (!regex.test(input.value)) {
+                isValid = false;
+                message = input.title || 'Invalid format';
+            }
+        }
+        
+        this.showFieldFeedback(input, isValid, message);
+        return isValid;
+    }
+
+    validateForm(form) {
+        const inputs = form.querySelectorAll('input[required]');
+        let isValid = true;
+        
+        inputs.forEach(input => {
+            if (!this.validateField(input)) {
+                isValid = false;
+            }
+        });
+        
+        return isValid;
+    }
+
+    showFieldFeedback(input, isValid, message) {
+        const feedback = input.parentElement.querySelector('.input-feedback');
+        input.classList.toggle('error', !isValid);
+        input.classList.toggle('success', isValid && input.value);
+        
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.className = `input-feedback ${isValid ? 'success' : 'error'}`;
+        }
+    }
+
+    clearFieldError(input) {
+        const feedback = input.parentElement.querySelector('.input-feedback');
+        input.classList.remove('error', 'success');
+        if (feedback) {
+            feedback.textContent = '';
+            feedback.className = 'input-feedback';
+        }
+    }
+
+    handleFormSubmit(form) {
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        if (form.id === 'loginForm') {
+            window.app.auth.login(data.email, data.password);
+        } else if (form.id === 'registerForm') {
+            window.app.auth.register(data.username, data.email, data.password);
+        }
     }
 } 
