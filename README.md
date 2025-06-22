@@ -37,7 +37,7 @@ docker compose up --build -d
 curl http://localhost:8001/v1/feed | head
 ```
 
-You can also access the web interface directly in your browser at [http://localhost:8001/index.html#feed](http://localhost:8001/index.html#feed).
+You can also access the web interface directly in your browser at [http://localhost:8001/](http://localhost:8001/) or [http://localhost:8001/index.html](http://localhost:8001/index.html).
 
 **Default exposed ports:**
 - FastAPI: `8001`
@@ -48,9 +48,15 @@ You can also access the web interface directly in your browser at [http://localh
 | Path | Purpose |
 |------|---------|
 | `/v1/feed` | latest articles |
-| `/v1/search` | search |
+| `/v1/search` | full-text search (powered by MeiliSearch) |
 | `/docs` | Swagger UI |
 | `/readyz` | readiness check |
+
+**Web Interface Features:**
+- Dark/light theme toggle
+- Real-time search functionality
+- Responsive design
+- Article categorization
 
 **Note:**  
 Create a `.env.example` file in the project root with the following content. This file should be committed to your repository.
@@ -72,9 +78,10 @@ Then create a `.env` file (`cp .env.example .env`) and replace the placeholder v
 * **Language:** Python 3.11  
 * **Framework:** FastAPI with Uvicorn ASGI server  
 * **Database:** PostgreSQL 16  
-* **Search engine:** MeiliSearch 1.4  
+* **Search engine:** MeiliSearch 1.4 (fully operational with full-text search)
 * **Containerisation:** Docker & Docker Compose  
 * **Continuous integration:** GitHub Actions (lint, tests, image build)
+* **Frontend:** Static HTML/CSS/JS with responsive design and theme switching
 
 ---
 
@@ -221,5 +228,3 @@ pytest -q
 
 ## API Response Fields
 - `is_saved`: `true` if you have saved the article, `false` otherwise.
-
-
