@@ -820,6 +820,10 @@ class App {
     }
     
     async unfollowOutlet(outlet) {
+        console.log('App unfollowOutlet called with:', outlet);
+        console.log('Current user:', this.currentUser);
+        console.log('API token:', this.api.token ? this.api.token.substring(0, 10) + '...' : 'No token');
+        
         // Check if user is authenticated
         if (!this.currentUser) {
             this.ui.showToast('Please login to manage followed outlets', 'warning');
