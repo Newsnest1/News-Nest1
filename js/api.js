@@ -8,42 +8,28 @@ export class API {
         this.token = token;
         if (token) {
             localStorage.setItem('access_token', token);
-            console.log('Token stored in localStorage:', token.substring(0, 10) + '...');
         } else {
             localStorage.removeItem('access_token');
-            console.log('Token removed from localStorage');
         }
     }
 
     getStoredToken() {
         const stored = localStorage.getItem('access_token');
-        console.log('Retrieved token from localStorage:', stored ? stored.substring(0, 10) + '...' : 'No token');
         return stored;
     }
 
     getHeaders(isJson = true) {
         const headers = {};
         if (isJson) headers['Content-Type'] = 'application/json';
-        if (this.token) {
-            headers['Authorization'] = `Bearer ${this.token}`;
-            console.log('Adding auth header with token:', this.token.substring(0, 10) + '...');
-        } else {
-            console.log('No token available for auth header');
-        }
+        if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
         return headers;
     }
 
     async request(path, options = {}) {
         const url = `${this.baseUrl}${path}`;
-        console.log('Making request to:', url);
-        console.log('Request options:', options);
-        
         const response = await fetch(url, options);
-        console.log('Response status:', response.status);
-        
         if (!response.ok) {
             const error = await response.json().catch(() => ({}));
-            console.log('Error response:', error);
             throw new Error(error.detail || response.statusText);
         }
         return response.json();
@@ -94,7 +80,6 @@ export class API {
             const data = await response.json();
             return data.articles || [];
         } catch (error) {
-            console.error('Error fetching articles:', error);
             throw error;
         }
     }
@@ -109,7 +94,6 @@ export class API {
             const data = await response.json();
             return data.articles || [];
         } catch (error) {
-            console.error('Error searching articles:', error);
             throw error;
         }
     }
@@ -136,8 +120,6 @@ export class API {
     }
 
     async unfollowOutlet(outletName) {
-        console.log('unfollowOutlet called with:', outletName);
-        console.log('Current token:', this.token ? this.token.substring(0, 10) + '...' : 'No token');
         return this.request(`/users/me/follow/outlet?outlet=${encodeURIComponent(outletName)}`, {
             method: 'DELETE',
             headers: this.getHeaders()
@@ -177,7 +159,6 @@ export class API {
             throw new Error(error.detail || response.statusText);
         }
         const data = await response.json();
-        console.log('Login successful, setting token:', data.access_token.substring(0, 10) + '...');
         this.setToken(data.access_token);
         return data;
     }
