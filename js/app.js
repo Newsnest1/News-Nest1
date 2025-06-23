@@ -207,6 +207,17 @@ class App {
         } else {
             console.log('notificationToggle element not found');
         }
+        
+        // Test event listener for temporary checkbox
+        const testToggle = document.getElementById('testToggle');
+        if (testToggle) {
+            console.log('Adding test event listener to testToggle');
+            testToggle.addEventListener('change', (e) => {
+                console.log('Test toggle changed:', e.target.checked);
+                alert('Test toggle works! Value: ' + e.target.checked);
+            });
+        }
+        
         const topicNotificationToggle = document.getElementById('topicNotificationToggle');
         if (topicNotificationToggle) {
             console.log('Adding event listener to topicNotificationToggle');
@@ -421,6 +432,8 @@ class App {
                                 <input type="checkbox" id="notificationToggle" ${user.notifications_enabled ? 'checked' : ''}>
                                 <span class="slider round"></span>
                             </div>
+                            <!-- Temporary test checkbox -->
+                            <input type="checkbox" id="testToggle" style="margin-left: 10px;">
                         </div>
                         
                         <div class="notification-option">
@@ -572,8 +585,8 @@ class App {
                 } else {
                     availableOutlets.forEach(source => {
                         const option = document.createElement('option');
-                        option.value = source;
-                        option.textContent = source;
+                        option.value = source; // Keep original name for API
+                        option.textContent = this.cleanOutletName(source); // Display clean name
                         outletDropdown.appendChild(option);
                     });
                 }
@@ -613,7 +626,7 @@ class App {
         
         outletsList.innerHTML = outlets.map(outlet => `
             <div class="outlet-tag">
-                <span class="outlet-name">${outlet}</span>
+                <span class="outlet-name">${this.cleanOutletName(outlet)}</span>
                 <button class="unfollow-btn" onclick="app.unfollowOutlet('${outlet}')" title="Unfollow ${outlet}">
                     <i class="fas fa-times"></i>
                 </button>
@@ -1068,7 +1081,7 @@ class App {
                     <p class="article-card-summary">${article.content || 'No summary available'}</p>
                     <div class="article-card-footer">
                         <div class="article-meta">
-                            <span class="article-card-source">${sourceName}</span>
+                            <span class="article-card-source">${this.cleanOutletName(sourceName)}</span>
                             <span class="article-card-date">${this.formatDate(article.published_at)}</span>
                         </div>
                         <div class="article-actions">
@@ -1221,6 +1234,65 @@ class App {
         // SVG placeholder with colored background and category initial
         const svg = `<svg width='120' height='80' xmlns='http://www.w3.org/2000/svg'><rect width='120' height='80' fill='${color}'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='#fff' font-family='Arial'>${text}</text></svg>`;
         return `data:image/svg+xml;base64,${btoa(svg)}`;
+    }
+
+    cleanOutletName(sourceName) {
+        // Mapping of messy RSS feed names to clean, recognizable names
+        const outletMapping = {
+            'BBC News': 'BBC News',
+            'NYT > Technology': 'The New York Times',
+            'The Verge': 'The Verge',
+            'WIRED': 'Wired',
+            'Ars Technica': 'Ars Technica',
+            'VentureBeat': 'VentureBeat',
+            'Engadget is a web magazine with obsessive daily coverage of everything new in gadgets and consumer electronics': 'Engadget',
+            'TechCrunch': 'TechCrunch',
+            'Crunch Hype': 'TechCrunch',
+            'Bloomberg Markets': 'Bloomberg',
+            'Bloomberg Technology': 'Bloomberg',
+            'Finance & economics': 'The Economist',
+            'World news | The Guardian': 'The Guardian',
+            'The Guardian': 'The Guardian',
+            'Al Jazeera – Breaking News, World News and Video from Al Jazeera': 'Al Jazeera',
+            'Al Jazeera': 'Al Jazeera',
+            'NPR Topics: News': 'NPR',
+            'Nature': 'Nature',
+            'Latest News from Science Magazine': 'Science',
+            'Deutsche Welle': 'Deutsche Welle',
+            'Deutsche Welle: DW.com Deutsch': 'Deutsche Welle',
+            'France 24 - International breaking news, top stories and headlines': 'France 24',
+            'France 24': 'France 24',
+            'News | Euronews RSS': 'Euronews',
+            'Euronews': 'Euronews',
+            'UK homepage': 'BBC News',
+            'International homepage': 'BBC News',
+            'CNN': 'CNN',
+            'Reuters': 'Reuters',
+            'Politico': 'Politico',
+            'Financial Times': 'Financial Times',
+            'FT': 'Financial Times'
+        };
+
+        // Try to find a match in the mapping
+        for (const [key, value] of Object.entries(outletMapping)) {
+            if (sourceName.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(sourceName.toLowerCase())) {
+                return value;
+            }
+        }
+
+        // If no match found, try to clean up the name
+        let cleaned = sourceName
+            .replace(/^[^a-zA-Z]*/, '') // Remove leading non-letters
+            .replace(/[^a-zA-Z0-9\s\-&.]*$/, '') // Remove trailing non-letters
+            .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+            .trim();
+
+        // If the cleaned name is still too long, truncate it
+        if (cleaned.length > 30) {
+            cleaned = cleaned.substring(0, 30) + '...';
+        }
+
+        return cleaned || sourceName;
     }
 
     async handleNotificationToggle(isEnabled) {
