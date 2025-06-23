@@ -559,13 +559,24 @@ class App {
                 }
             }
             
-            // Populate outlet dropdown (sources) - filter out already followed
+            // Populate outlet dropdown (sources) - filter out already followed and deduplicate by clean names
             const outletDropdown = document.getElementById('newOutletInput');
             if (outletDropdown) {
                 // Clear existing options except the first one
                 outletDropdown.innerHTML = '<option value="">Select an outlet...</option>';
                 
-                const availableOutlets = sources.filter(source => !followedOutlets.includes(source));
+                // Create a map to deduplicate by clean names
+                const cleanNameMap = new Map();
+                sources.forEach(source => {
+                    const cleanName = this.cleanOutletName(source);
+                    if (!cleanNameMap.has(cleanName)) {
+                        cleanNameMap.set(cleanName, source);
+                    }
+                });
+                
+                // Convert back to array and filter out already followed
+                const uniqueSources = Array.from(cleanNameMap.values());
+                const availableOutlets = uniqueSources.filter(source => !followedOutlets.includes(source));
                 
                 if (availableOutlets.length === 0) {
                     outletDropdown.innerHTML = '<option value="" disabled>All outlets already followed</option>';
@@ -719,8 +730,16 @@ class App {
     }
     
     async followTopic() {
-        const dropdown = document.getElementById('newTopicInput');
-        const topic = dropdown.value;
+        // Check if user is authenticated
+        if (!this.currentUser) {
+            this.ui.showToast('Please login to follow topics', 'warning');
+            this.showLoginModal();
+            return;
+        }
+        
+        const topicInput = document.getElementById('newTopicInput');
+        const topic = topicInput.value.trim();
+        
         if (!topic) {
             this.ui.showToast('Please select a topic to follow', 'warning');
             return;
@@ -728,49 +747,99 @@ class App {
         
         try {
             await this.api.followTopic(topic);
-            dropdown.value = ''; // Reset dropdown
+            this.ui.showToast(`Now following: ${topic}`, 'success');
+            topicInput.value = '';
+            // Reload preferences to update the UI
             await this.loadPreferences();
-            this.ui.showToast(`Followed ${topic}`, 'success');
         } catch (error) {
-            this.ui.showToast(error.message, 'error');
+            console.error('Failed to follow topic:', error);
+            if (error.message.includes('Not authenticated') || error.message.includes('401')) {
+                this.ui.showToast('Please login to follow topics', 'warning');
+                this.showLoginModal();
+            } else {
+                this.ui.showToast('Failed to follow topic', 'error');
+            }
         }
     }
     
     async unfollowTopic(topic) {
+        // Check if user is authenticated
+        if (!this.currentUser) {
+            this.ui.showToast('Please login to manage followed topics', 'warning');
+            this.showLoginModal();
+            return;
+        }
+        
         try {
             await this.api.unfollowTopic(topic);
+            this.ui.showToast(`Unfollowed topic: ${topic}`, 'success');
+            // Reload preferences to update the UI
             await this.loadPreferences();
-            this.ui.showToast(`Unfollowed ${topic}`, 'success');
         } catch (error) {
-            this.ui.showToast(error.message, 'error');
+            console.error('Failed to unfollow topic:', error);
+            if (error.message.includes('Not authenticated') || error.message.includes('401')) {
+                this.ui.showToast('Please login to manage followed topics', 'warning');
+                this.showLoginModal();
+            } else {
+                this.ui.showToast('Failed to unfollow topic', 'error');
+            }
         }
     }
     
     async followOutlet() {
-        const dropdown = document.getElementById('newOutletInput');
-        const outlet = dropdown.value;
+        // Check if user is authenticated
+        if (!this.currentUser) {
+            this.ui.showToast('Please login to follow outlets', 'warning');
+            this.showLoginModal();
+            return;
+        }
+        
+        const outletInput = document.getElementById('newOutletInput');
+        const outlet = outletInput.value.trim();
+        
         if (!outlet) {
             this.ui.showToast('Please select an outlet to follow', 'warning');
             return;
         }
-
+        
         try {
             await this.api.followOutlet(outlet);
-            dropdown.value = ''; // Reset dropdown
+            this.ui.showToast(`Now following: ${this.cleanOutletName(outlet)}`, 'success');
+            outletInput.value = '';
+            // Reload preferences to update the UI
             await this.loadPreferences();
-            this.ui.showToast(`Followed ${outlet}`, 'success');
         } catch (error) {
-            this.ui.showToast(error.message, 'error');
+            console.error('Failed to follow outlet:', error);
+            if (error.message.includes('Not authenticated') || error.message.includes('401')) {
+                this.ui.showToast('Please login to follow outlets', 'warning');
+                this.showLoginModal();
+            } else {
+                this.ui.showToast('Failed to follow outlet', 'error');
+            }
         }
     }
     
     async unfollowOutlet(outlet) {
+        // Check if user is authenticated
+        if (!this.currentUser) {
+            this.ui.showToast('Please login to manage followed outlets', 'warning');
+            this.showLoginModal();
+            return;
+        }
+        
         try {
             await this.api.unfollowOutlet(outlet);
+            this.ui.showToast(`Unfollowed outlet: ${this.cleanOutletName(outlet)}`, 'success');
+            // Reload preferences to update the UI
             await this.loadPreferences();
-            this.ui.showToast(`Unfollowed ${outlet}`, 'success');
         } catch (error) {
-            this.ui.showToast(error.message, 'error');
+            console.error('Failed to unfollow outlet:', error);
+            if (error.message.includes('Not authenticated') || error.message.includes('401')) {
+                this.ui.showToast('Please login to manage followed outlets', 'warning');
+                this.showLoginModal();
+            } else {
+                this.ui.showToast('Failed to unfollow outlet', 'error');
+            }
         }
     }
     
