@@ -186,6 +186,10 @@ export class API {
         }
     }
 
+    async getMe() {
+        return this.request('/users/me', { headers: this.getHeaders() });
+    }
+
     getCurrentUser() {
         return JSON.parse(localStorage.getItem('current_user'));
     }
