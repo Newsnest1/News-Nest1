@@ -200,21 +200,20 @@ def categorize_article(title: str, content: str = "") -> str:
         ]
     }
 
-    # Improved scoring system
+
     category_scores = {}
     
     for category, keywords in categories.items():
         score = 0
         for keyword in keywords:
-            # Check for exact word matches (more precise)
-            if f" {keyword} " in f" {text_to_analyze} ":
-                score += 2  # Higher weight for exact matches
-            elif keyword in text_to_analyze:
-                score += 1  # Lower weight for partial matches
         
+            if f" {keyword} " in f" {text_to_analyze} ":
+                score += 2 
+            elif keyword in text_to_analyze:
+                score += 1  
         category_scores[category] = score
     
-    # Find the category with the highest score
+  
     if category_scores:
         best_category = max(category_scores, key=category_scores.get)
         if category_scores[best_category] > 0:
