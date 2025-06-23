@@ -1347,4 +1347,35 @@ textarea:focus {
     .article-card-image {
         height: 150px;
     }
+}
+
+/* Notification Banner */
+.notification-banner {
+    background-color: var(--accent-color);
+    color: var(--primary-bg-color);
+    padding: 1rem;
+    text-align: center;
+    position: sticky;
+    top: 60px; /* Position it below the header */
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.3s ease-in-out;
+}
+
+.notification-banner.hidden {
+    transform: translateY(-100%);
+    display: none;
+}
+
+.notification-banner .refresh-btn {
+    background-color: var(--primary-bg-color);
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
 } 

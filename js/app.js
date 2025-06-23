@@ -5,7 +5,7 @@ import { API } from './api.js';
 import { Router } from './router.js';
 import { Auth } from './auth.js';
 import { UI } from './ui.js';
-import { WebSocket } from './websocket.js';
+import { WebSocketManager } from './websocket.js';
 
 class App {
     constructor() {
@@ -884,9 +884,9 @@ class App {
         const token = this.api.token;
         if (!token) return;
         
-        this.websocket = new WebSocket(token);
+        this.websocket = new WebSocketManager(token);
         this.websocket.onMessage = (data) => this.handleWebSocketMessage(data);
-        this.websocket.onError = () => this.ui.showToast('WebSocket connection lost. Please refresh.', 'error');
+        this.websocket.connect();
     }
     
     disconnectWebSocket() {
@@ -898,15 +898,17 @@ class App {
     
     handleWebSocketMessage(data) {
         try {
-            const message = JSON.parse(data);
-            if (message.type === 'new_article') {
-                this.ui.showToast(`New article: ${message.article.title}`);
-                if (this.currentView === 'feed') {
-                    this.loadFeed();
-                }
+            // The data is already parsed by WebSocketManager
+            if (data.type === 'new_articles') {
+                this.ui.showNotificationBanner(
+                    `New articles are available!`,
+                    () => {
+                        this.loadFeed(); // Refresh the feed on click
+                    }
+                );
             }
         } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
+            console.error('Error handling WebSocket message:', error);
         }
     }
 

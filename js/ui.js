@@ -168,6 +168,23 @@ export class UI {
         }, 4000);
     }
 
+    showNotificationBanner(message, onRefresh) {
+        const banner = document.getElementById('notificationBanner');
+        if (!banner) return;
+
+        banner.innerHTML = `
+            <span>${message}</span>
+            <button class="refresh-btn">Refresh</button>
+        `;
+        banner.classList.remove('hidden');
+
+        const refreshButton = banner.querySelector('.refresh-btn');
+        refreshButton.addEventListener('click', () => {
+            onRefresh();
+            banner.classList.add('hidden');
+        });
+    }
+
     updateUIForUser(username) {
         document.getElementById('userToggle').innerHTML = `<i class="fas fa-user"></i> ${username}`;
         document.getElementById('loginBtn').classList.add('hidden');
