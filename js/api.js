@@ -117,9 +117,9 @@ export class API {
     }
 
     async unfollowOutlet(outletName) {
-        return await this.request('/users/me/follow/outlet', {
+        return this.request(`/users/me/follow/outlet?outlet=${encodeURIComponent(outletName)}`, {
             method: 'DELETE',
-            params: { outlet: outletName }
+            headers: this.getHeaders()
         });
     }
 
@@ -205,9 +205,7 @@ export class API {
         return await this.request('/users/me/notifications', {
             method: 'PUT',
             body: JSON.stringify(preferences),
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: this.getHeaders()
         });
     }
 }
