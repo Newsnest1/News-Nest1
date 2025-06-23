@@ -315,7 +315,8 @@ class App {
         try {
             this.ui.showLoading();
             
-            // Get followed topics and outlets
+            // Get user, followed topics, and outlets
+            const user = await this.api.getMe();
             const topicsResponse = await this.api.getFollowedTopics();
             const outletsResponse = await this.api.getFollowedOutlets();
             
@@ -323,7 +324,7 @@ class App {
             const outlets = outletsResponse.outlets || [];
             
             // Render the preferences
-            this.renderPreferencesView(topics, outlets);
+            this.renderPreferencesView(user, topics, outlets);
             
         } catch (error) {
             console.error('Error loading preferences:', error);
@@ -333,7 +334,7 @@ class App {
         }
     }
     
-    renderPreferencesView(topics, outlets) {
+    renderPreferencesView(user, topics, outlets) {
         const preferencesView = document.getElementById('preferencesView');
         if (!preferencesView) return;
         
@@ -344,6 +345,19 @@ class App {
             </div>
             
             <div class="preferences-container">
+                <div class="preference-section">
+                    <h2><i class="fas fa-bell"></i> Notifications</h2>
+                    <div class="notification-settings">
+                        <label for="notificationToggle" class="toggle-switch-label">
+                            Enable Push Notifications
+                        </label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="notificationToggle" ${user.notifications_enabled ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="preference-section">
                     <h2><i class="fas fa-tags"></i> Followed Topics</h2>
                     <div class="topics-container">
@@ -386,6 +400,11 @@ class App {
         this.populatePreferenceDropdowns();
         this.renderTopicsList(topics);
         this.renderOutletsList(outlets);
+        
+        // Add event listener for the notification toggle
+        document.getElementById('notificationToggle').addEventListener('change', (e) => {
+            this.handleNotificationToggle(e.target.checked);
+        });
     }
     
     async populatePreferenceDropdowns() {
@@ -1084,6 +1103,23 @@ class App {
         // SVG placeholder with colored background and category initial
         const svg = `<svg width='120' height='80' xmlns='http://www.w3.org/2000/svg'><rect width='120' height='80' fill='${color}'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='40' fill='#fff' font-family='Arial'>${text}</text></svg>`;
         return `data:image/svg+xml;base64,${btoa(svg)}`;
+    }
+
+    async handleNotificationToggle(isEnabled) {
+        try {
+            await this.api.updateNotificationPreferences({
+                notifications_enabled: isEnabled,
+                // We can extend this later to manage topics/outlets
+                notify_topics: [],
+                notify_outlets: []
+            });
+            this.ui.showToast(`Notifications ${isEnabled ? 'enabled' : 'disabled'}`, 'success');
+        } catch (error) {
+            console.error('Failed to update notification preferences:', error);
+            this.ui.showToast('Failed to update settings', 'error');
+            // Revert the toggle on failure
+            document.getElementById('notificationToggle').checked = !isEnabled;
+        }
     }
 }
 

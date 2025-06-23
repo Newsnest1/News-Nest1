@@ -116,10 +116,10 @@ export class API {
         });
     }
 
-    async unfollowOutlet(outlet) {
-        return this.request(`/users/me/follow/outlet?outlet=${encodeURIComponent(outlet)}`, {
+    async unfollowOutlet(outletName) {
+        return await this.request('/users/me/follow/outlet', {
             method: 'DELETE',
-            headers: this.getHeaders()
+            params: { outlet: outletName }
         });
     }
 
@@ -195,5 +195,15 @@ export class API {
         } else {
             localStorage.removeItem('current_user');
         }
+    }
+
+    async updateNotificationPreferences(preferences) {
+        return await this.request('/users/me/notifications', {
+            method: 'PUT',
+            body: JSON.stringify(preferences),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
     }
 }
