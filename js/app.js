@@ -208,16 +208,6 @@ class App {
             console.log('notificationToggle element not found');
         }
         
-        // Test event listener for temporary checkbox
-        const testToggle = document.getElementById('testToggle');
-        if (testToggle) {
-            console.log('Adding test event listener to testToggle');
-            testToggle.addEventListener('change', (e) => {
-                console.log('Test toggle changed:', e.target.checked);
-                alert('Test toggle works! Value: ' + e.target.checked);
-            });
-        }
-        
         const topicNotificationToggle = document.getElementById('topicNotificationToggle');
         if (topicNotificationToggle) {
             console.log('Adding event listener to topicNotificationToggle');
@@ -432,8 +422,6 @@ class App {
                                 <input type="checkbox" id="notificationToggle" ${user.notifications_enabled ? 'checked' : ''}>
                                 <span class="slider round"></span>
                             </div>
-                            <!-- Temporary test checkbox -->
-                            <input type="checkbox" id="testToggle" style="margin-left: 10px;">
                         </div>
                         
                         <div class="notification-option">
@@ -1297,6 +1285,14 @@ class App {
 
     async handleNotificationToggle(isEnabled) {
         console.log('handleNotificationToggle called with:', isEnabled);
+        
+        // Check if user is authenticated
+        if (!this.currentUser) {
+            this.ui.showToast('Please login to update notification preferences', 'warning');
+            this.showLoginModal();
+            return;
+        }
+        
         try {
             // Get the current states of the other toggles
             const topicToggle = document.getElementById('topicNotificationToggle');
@@ -1321,7 +1317,12 @@ class App {
             this.ui.showToast(`Notifications ${isEnabled ? 'enabled' : 'disabled'}`, 'success');
         } catch (error) {
             console.error('Failed to update notification preferences:', error);
-            this.ui.showToast('Failed to update settings', 'error');
+            if (error.message.includes('Not authenticated') || error.message.includes('401')) {
+                this.ui.showToast('Please login to update notification preferences', 'warning');
+                this.showLoginModal();
+            } else {
+                this.ui.showToast('Failed to update settings', 'error');
+            }
             // Revert the toggle on failure
             document.getElementById('notificationToggle').checked = !isEnabled;
         }
@@ -1329,6 +1330,14 @@ class App {
 
     async handleNotificationPreferencesUpdate() {
         console.log('handleNotificationPreferencesUpdate called');
+        
+        // Check if user is authenticated
+        if (!this.currentUser) {
+            this.ui.showToast('Please login to update notification preferences', 'warning');
+            this.showLoginModal();
+            return;
+        }
+        
         try {
             const mainToggle = document.getElementById('notificationToggle');
             const topicToggle = document.getElementById('topicNotificationToggle');
@@ -1345,7 +1354,12 @@ class App {
             this.ui.showToast('Notification preferences updated successfully', 'success');
         } catch (error) {
             console.error('Failed to update notification preferences:', error);
-            this.ui.showToast('Failed to update settings', 'error');
+            if (error.message.includes('Not authenticated') || error.message.includes('401')) {
+                this.ui.showToast('Please login to update notification preferences', 'warning');
+                this.showLoginModal();
+            } else {
+                this.ui.showToast('Failed to update settings', 'error');
+            }
         }
     }
 }
