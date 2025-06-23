@@ -8,9 +8,17 @@ export class API {
         this.token = token;
         if (token) {
             localStorage.setItem('access_token', token);
+            console.log('Token stored in localStorage:', token.substring(0, 10) + '...');
         } else {
             localStorage.removeItem('access_token');
+            console.log('Token removed from localStorage');
         }
+    }
+
+    getStoredToken() {
+        const stored = localStorage.getItem('access_token');
+        console.log('Retrieved token from localStorage:', stored ? stored.substring(0, 10) + '...' : 'No token');
+        return stored;
     }
 
     getHeaders(isJson = true) {

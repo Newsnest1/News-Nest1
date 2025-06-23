@@ -443,6 +443,11 @@ class App {
                                 <span class="slider round"></span>
                             </div>
                         </div>
+                        
+                        <!-- Temporary test button -->
+                        <button onclick="app.testAuth()" style="margin-top: 10px; padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Test Authentication
+                        </button>
                     </div>
                 </div>
 
@@ -1433,6 +1438,22 @@ class App {
             } else {
                 this.ui.showToast('Failed to update settings', 'error');
             }
+        }
+    }
+
+    async testAuth() {
+        console.log('=== AUTHENTICATION TEST ===');
+        console.log('Current user:', this.currentUser);
+        console.log('API token:', this.api.token ? this.api.token.substring(0, 10) + '...' : 'No token');
+        console.log('Stored token:', this.api.getStoredToken());
+        
+        try {
+            const user = await this.api.getMe();
+            console.log('getMe() successful:', user);
+            alert('Authentication working! User: ' + user.username);
+        } catch (error) {
+            console.log('getMe() failed:', error);
+            alert('Authentication failed: ' + error.message);
         }
     }
 }
