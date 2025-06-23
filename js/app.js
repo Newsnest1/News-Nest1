@@ -186,8 +186,67 @@ class App {
             }
         });
 
-        // Load more articles
-        document.getElementById('loadMoreBtn').addEventListener('click', () => this.loadMoreArticles());
+        // Add event listener for the notification toggle
+        const notificationToggle = document.getElementById('notificationToggle');
+        if (notificationToggle) {
+            console.log('Adding event listener to notificationToggle');
+            notificationToggle.addEventListener('change', (e) => {
+                console.log('notificationToggle changed:', e.target.checked);
+                this.handleNotificationToggle(e.target.checked);
+            });
+            
+            // Also add click listener to the slider as fallback
+            const slider = notificationToggle.nextElementSibling;
+            if (slider) {
+                slider.addEventListener('click', (e) => {
+                    console.log('Slider clicked, toggling checkbox');
+                    notificationToggle.checked = !notificationToggle.checked;
+                    notificationToggle.dispatchEvent(new Event('change'));
+                });
+            }
+        } else {
+            console.log('notificationToggle element not found');
+        }
+        const topicNotificationToggle = document.getElementById('topicNotificationToggle');
+        if (topicNotificationToggle) {
+            console.log('Adding event listener to topicNotificationToggle');
+            topicNotificationToggle.addEventListener('change', (e) => {
+                console.log('topicNotificationToggle changed:', e.target.checked);
+                this.handleNotificationPreferencesUpdate();
+            });
+            
+            // Also add click listener to the slider as fallback
+            const topicSlider = topicNotificationToggle.nextElementSibling;
+            if (topicSlider) {
+                topicSlider.addEventListener('click', (e) => {
+                    console.log('Topic slider clicked, toggling checkbox');
+                    topicNotificationToggle.checked = !topicNotificationToggle.checked;
+                    topicNotificationToggle.dispatchEvent(new Event('change'));
+                });
+            }
+        } else {
+            console.log('topicNotificationToggle element not found');
+        }
+        const outletNotificationToggle = document.getElementById('outletNotificationToggle');
+        if (outletNotificationToggle) {
+            console.log('Adding event listener to outletNotificationToggle');
+            outletNotificationToggle.addEventListener('change', (e) => {
+                console.log('outletNotificationToggle changed:', e.target.checked);
+                this.handleNotificationPreferencesUpdate();
+            });
+            
+            // Also add click listener to the slider as fallback
+            const outletSlider = outletNotificationToggle.nextElementSibling;
+            if (outletSlider) {
+                outletSlider.addEventListener('click', (e) => {
+                    console.log('Outlet slider clicked, toggling checkbox');
+                    outletNotificationToggle.checked = !outletNotificationToggle.checked;
+                    outletNotificationToggle.dispatchEvent(new Event('change'));
+                });
+            }
+        } else {
+            console.log('outletNotificationToggle element not found');
+        }
     }
     
     async loadView(viewName) {
@@ -261,6 +320,7 @@ class App {
                 // Show load more button if there are articles
                 const loadMoreBtn = document.getElementById('loadMoreBtn');
                 loadMoreBtn.style.display = 'inline-flex';
+                loadMoreBtn.addEventListener('click', () => this.loadMoreArticles());
             } else {
                 articlesGrid.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><h3>No articles found</h3><p>Try refreshing or changing the category filter.</p></div>';
                 document.getElementById('loadMoreBtn').style.display = 'none';
@@ -335,9 +395,14 @@ class App {
     }
     
     renderPreferencesView(user, topics, outlets) {
+        console.log('renderPreferencesView called with user:', user);
         const preferencesView = document.getElementById('preferencesView');
-        if (!preferencesView) return;
+        if (!preferencesView) {
+            console.log('preferencesView element not found');
+            return;
+        }
         
+        console.log('Rendering preferences view...');
         preferencesView.innerHTML = `
             <div class="view-header">
                 <h1><i class="fas fa-cog"></i> Preferences</h1>
@@ -348,12 +413,34 @@ class App {
                 <div class="preference-section">
                     <h2><i class="fas fa-bell"></i> Notifications</h2>
                     <div class="notification-settings">
-                        <label for="notificationToggle" class="toggle-switch-label">
-                            Enable Push Notifications
-                        </label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="notificationToggle" ${user.notifications_enabled ? 'checked' : ''}>
-                            <span class="slider round"></span>
+                        <div class="notification-option">
+                            <label for="notificationToggle" class="toggle-switch-label">
+                                Enable Push Notifications
+                            </label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="notificationToggle" ${user.notifications_enabled ? 'checked' : ''}>
+                                <span class="slider round"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="notification-option">
+                            <label for="topicNotificationToggle" class="toggle-switch-label">
+                                Notify for Followed Topics
+                            </label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="topicNotificationToggle" ${user.notify_topics ? 'checked' : ''} ${!user.notifications_enabled ? 'disabled' : ''}>
+                                <span class="slider round"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="notification-option">
+                            <label for="outletNotificationToggle" class="toggle-switch-label">
+                                Notify for Followed Outlets
+                            </label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="outletNotificationToggle" ${user.notify_outlets ? 'checked' : ''} ${!user.notifications_enabled ? 'disabled' : ''}>
+                                <span class="slider round"></span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -396,15 +483,46 @@ class App {
             </div>
         `;
         
+        console.log('HTML rendered, now setting up event listeners...');
+        
         // Populate dropdowns and render existing topics and outlets
         this.populatePreferenceDropdowns();
         this.renderTopicsList(topics);
         this.renderOutletsList(outlets);
         
         // Add event listener for the notification toggle
-        document.getElementById('notificationToggle').addEventListener('change', (e) => {
-            this.handleNotificationToggle(e.target.checked);
-        });
+        const notificationToggle = document.getElementById('notificationToggle');
+        if (notificationToggle) {
+            console.log('Adding event listener to notificationToggle');
+            notificationToggle.addEventListener('change', (e) => {
+                console.log('notificationToggle changed:', e.target.checked);
+                this.handleNotificationToggle(e.target.checked);
+            });
+        } else {
+            console.log('notificationToggle element not found');
+        }
+        const topicNotificationToggle = document.getElementById('topicNotificationToggle');
+        if (topicNotificationToggle) {
+            console.log('Adding event listener to topicNotificationToggle');
+            topicNotificationToggle.addEventListener('change', (e) => {
+                console.log('topicNotificationToggle changed:', e.target.checked);
+                this.handleNotificationPreferencesUpdate();
+            });
+        } else {
+            console.log('topicNotificationToggle element not found');
+        }
+        const outletNotificationToggle = document.getElementById('outletNotificationToggle');
+        if (outletNotificationToggle) {
+            console.log('Adding event listener to outletNotificationToggle');
+            outletNotificationToggle.addEventListener('change', (e) => {
+                console.log('outletNotificationToggle changed:', e.target.checked);
+                this.handleNotificationPreferencesUpdate();
+            });
+        } else {
+            console.log('outletNotificationToggle element not found');
+        }
+        
+        console.log('Event listeners setup complete');
     }
     
     async populatePreferenceDropdowns() {
@@ -1106,19 +1224,56 @@ class App {
     }
 
     async handleNotificationToggle(isEnabled) {
+        console.log('handleNotificationToggle called with:', isEnabled);
         try {
-            await this.api.updateNotificationPreferences({
+            // Get the current states of the other toggles
+            const topicToggle = document.getElementById('topicNotificationToggle');
+            const outletToggle = document.getElementById('outletNotificationToggle');
+            const notifyTopics = topicToggle.checked;
+            const notifyOutlets = outletToggle.checked;
+
+            console.log('Current toggle states:', { notifyTopics, notifyOutlets });
+
+            // Enable/disable the topic/outlet toggles based on main toggle
+            topicToggle.disabled = !isEnabled;
+            outletToggle.disabled = !isEnabled;
+
+            const preferences = {
                 notifications_enabled: isEnabled,
-                // We can extend this later to manage topics/outlets
-                notify_topics: [],
-                notify_outlets: []
-            });
+                notify_topics: isEnabled ? notifyTopics : false,
+                notify_outlets: isEnabled ? notifyOutlets : false
+            };
+            
+            console.log('Sending preferences to API:', preferences);
+            await this.api.updateNotificationPreferences(preferences);
             this.ui.showToast(`Notifications ${isEnabled ? 'enabled' : 'disabled'}`, 'success');
         } catch (error) {
             console.error('Failed to update notification preferences:', error);
             this.ui.showToast('Failed to update settings', 'error');
             // Revert the toggle on failure
             document.getElementById('notificationToggle').checked = !isEnabled;
+        }
+    }
+
+    async handleNotificationPreferencesUpdate() {
+        console.log('handleNotificationPreferencesUpdate called');
+        try {
+            const mainToggle = document.getElementById('notificationToggle');
+            const topicToggle = document.getElementById('topicNotificationToggle');
+            const outletToggle = document.getElementById('outletNotificationToggle');
+            
+            const preferences = {
+                notifications_enabled: mainToggle.checked,
+                notify_topics: mainToggle.checked ? topicToggle.checked : false,
+                notify_outlets: mainToggle.checked ? outletToggle.checked : false
+            };
+            
+            console.log('Sending preferences to API:', preferences);
+            await this.api.updateNotificationPreferences(preferences);
+            this.ui.showToast('Notification preferences updated successfully', 'success');
+        } catch (error) {
+            console.error('Failed to update notification preferences:', error);
+            this.ui.showToast('Failed to update settings', 'error');
         }
     }
 }
